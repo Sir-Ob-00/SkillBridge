@@ -26,8 +26,8 @@ const config: ExpoConfig = {
   },
   plugins: ['expo-secure-store', 'expo-location'],
   extra: {
-    apiBaseUrl: process.env.API_BASE_URL ?? 'https://api.skillbridge.dev',
-    socketUrl: process.env.SOCKET_URL ?? 'https://api.skillbridge.dev',
+    apiBaseUrl: process.env.API_BASE_URL,
+    socketUrl: process.env.SOCKET_URL,
   },
 };
 
