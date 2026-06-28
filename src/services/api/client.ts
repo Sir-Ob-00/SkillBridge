@@ -6,7 +6,7 @@ import axios, {
 import { CONFIG } from '@constants/config';
 import { secureStorage } from '@services/storage/secureStorage';
 import { API_ROUTES } from '@constants/apiRoutes';
-import { ApiResponse } from '@types/index';
+import { ApiResponse } from '@app-types/index';
 import { logger } from '@utils/logger';
 
 export interface ApiError {

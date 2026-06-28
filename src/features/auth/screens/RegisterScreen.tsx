@@ -9,7 +9,7 @@ import { colors } from '@shared/ui/colors';
 import { useAuth } from '@hooks/useAuth';
 import { validateEmail, validatePassword, validatePhone } from '@utils/validateEmail';
 import { ROLE_LABELS } from '@constants/roles';
-import { UserRole } from '@types/index';
+import { UserRole } from '@app-types/index';
 
 type Props = NativeStackScreenProps<AuthStackParamList, 'Register'>;
 

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { FlatList, View } from 'react-native';
+import { FlatList, View, Text } from 'react-native';
 import { CompositeScreenProps } from '@react-navigation/native';
 import { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
@@ -12,7 +12,7 @@ import { CategoryFilter } from '../components/CategoryFilter';
 import { ArtisanCardSkeleton } from '@shared/components/Loader';
 import { EmptyState } from '@shared/components';
 import { artisanApi } from '@services/api/artisan.api';
-import { ArtisanProfile } from '@types/index';
+import { ArtisanProfile } from '@app-types/index';
 import { useDebounce } from '@hooks/useDebounce';
 import { colors } from '@shared/ui/colors';
 

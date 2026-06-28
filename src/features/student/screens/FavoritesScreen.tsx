@@ -11,7 +11,7 @@ import { ArtisanCardSkeleton } from '@shared/components/Loader';
 import { EmptyState } from '@shared/components';
 import { useFavorites } from '../hooks/useFavorites';
 import { artisanApi } from '@services/api/artisan.api';
-import { ArtisanProfile } from '@types/index';
+import { ArtisanProfile } from '@app-types/index';
 
 type Props = CompositeScreenProps<
   BottomTabScreenProps<StudentTabParamList, 'Favorites'>,
@@ -60,7 +60,7 @@ export const FavoritesScreen: React.FC<Props> = ({ navigation }) => {
           keyExtractor={(item) => item.id}
           showsVerticalScrollIndicator={false}
           contentContainerStyle={{ paddingBottom: 24 }}
-          renderItem={({ item }) => (
+          renderItem={({ item }: { item: any }) => (
             <ArtisanCard
               artisan={item}
               isFavorite={isFavorite(item.id)}

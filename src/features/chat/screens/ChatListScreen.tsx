@@ -7,7 +7,7 @@ import { Avatar } from '@shared/components';
 import { Loader } from '@shared/components/Loader';
 import { EmptyState } from '@shared/components';
 import { chatApi } from '../services/chat.api';
-import { Chat } from '@types/index';
+import { Chat } from '@app-types/index';
 import { useAuthStore } from '@store/auth.store';
 import { formatRelativeTime } from '@utils/formatDate';
 import { truncate } from '@utils/helpers';

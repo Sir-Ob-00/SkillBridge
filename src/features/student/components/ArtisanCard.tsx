@@ -1,7 +1,7 @@
 import React from 'react';
 import { Image, Pressable, Text, View } from 'react-native';
 import { MapPin, BadgeCheck, Heart } from 'lucide-react-native';
-import { ArtisanProfile } from '@types/index';
+import { ArtisanProfile } from '@app-types/index';
 import { RatingStars } from './RatingStars';
 import { formatPriceRange } from '@utils/currency';
 import { colors } from '@shared/ui/colors';
@@ -34,7 +34,7 @@ export const ArtisanCard: React.FC<ArtisanCardProps> = ({
         ) : (
           <View className="h-full w-full items-center justify-center bg-primary/10">
             <Text className="text-3xl font-bold text-primary">
-              {artisan.businessName.charAt(0).toUpperCase()}
+              {artisan.businessName?.charAt(0).toUpperCase() ?? 'A'}
             </Text>
           </View>
         )}

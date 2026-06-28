@@ -48,7 +48,7 @@ export const NotificationsScreen: React.FC<Props> = ({ navigation }) => {
               ].join(' ')}
             >
               <View className="mr-4 mt-1 h-12 w-12 items-center justify-center rounded-2xl bg-white shadow-sm shadow-gray-100">
-                <Bell size={20} color={item.read ? colors.gray500 : colors.primary} />
+                <Bell size={20} color={item.read ? colors.gray400 : colors.primary} />
               </View>
               <View className="flex-1">
                 <Text className="text-base font-bold text-gray-900">{item.title}</Text>

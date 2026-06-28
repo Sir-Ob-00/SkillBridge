@@ -5,7 +5,7 @@ import { Scissors, GraduationCap, Sparkles } from 'lucide-react-native';
 import { AuthStackParamList } from '../auth.types';
 import { ScreenWrapper } from '@shared/layout';
 import { colors } from '@shared/ui/colors';
-import { UserRole } from '@types/index';
+import { UserRole } from '@app-types/index';
 
 type Props = NativeStackScreenProps<AuthStackParamList, 'RoleSelect'>;
 

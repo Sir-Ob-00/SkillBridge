@@ -1,6 +1,6 @@
 import { apiClient } from '@services/api/client';
 import { API_ROUTES } from '@constants/apiRoutes';
-import { ApiResponse, Chat, Message, PaginatedResponse } from '@types/index';
+import { ApiResponse, Chat, Message, PaginatedResponse } from '@app-types/index';
 
 export const chatApi = {
   listChats: async () => {

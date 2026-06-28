@@ -11,7 +11,7 @@ import { Button, Input } from '@shared/components';
 import { Loader } from '@shared/components/Loader';
 import { artisanApi } from '@services/api/artisan.api';
 import { useBookingStore } from '@store/booking.store';
-import { Service } from '@types/index';
+import { Service } from '@app-types/index';
 import { formatCurrency } from '@utils/currency';
 import { formatDateTime } from '@utils/formatDate';
 import { colors } from '@shared/ui/colors';
@@ -38,7 +38,7 @@ export const BookingScreen: React.FC<Props> = ({ route, navigation }) => {
       .getServices(artisanId)
       .then((services) => {
         if (!isMounted) return;
-        setService(services.find((s) => s.id === serviceId) ?? null);
+        setService(services.find((s: any) => s.id === serviceId) ?? null);
       })
       .finally(() => {
         if (isMounted) setIsLoadingService(false);

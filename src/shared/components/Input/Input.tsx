@@ -18,9 +18,10 @@ export const Input: React.FC<InputProps> = ({
   isPassword = false,
   leftIcon,
   className,
+  onFocus: onFocusProp,
+  onBlur: onBlurProp,
   ...rest
 }) => {
-  const [isFocused, setIsFocused] = useState(false);
   const [isSecure, setIsSecure] = useState(isPassword);
 
   return (
@@ -31,30 +32,15 @@ export const Input: React.FC<InputProps> = ({
         </Text>
       ) : null}
 
-      <View
-        className={[
-          'flex-row items-center rounded-2xl border px-4 h-14',
-          error
-            ? 'border-red-500 bg-red-50'
-            : isFocused
-            ? 'border-primary bg-white shadow-sm shadow-primary/10'
-            : 'border-transparent bg-gray-50',
-        ].join(' ')}
-      >
+      <View className="flex-row items-center rounded-2xl border border-transparent bg-gray-50 px-4 h-14">
         {leftIcon ? <View className="mr-2">{leftIcon}</View> : null}
 
         <TextInput
           className={['flex-1 py-3 text-base text-gray-900', className ?? ''].join(' ')}
           placeholderTextColor={colors.gray400}
           secureTextEntry={isSecure}
-          onFocus={(e) => {
-            setIsFocused(true);
-            rest.onFocus?.(e);
-          }}
-          onBlur={(e) => {
-            setIsFocused(false);
-            rest.onBlur?.(e);
-          }}
+          onFocus={onFocusProp}
+          onBlur={onBlurProp}
           {...rest}
         />
 

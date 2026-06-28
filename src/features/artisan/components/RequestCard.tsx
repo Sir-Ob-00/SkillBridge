@@ -1,7 +1,7 @@
 import React from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { Calendar, User } from 'lucide-react-native';
-import { Booking } from '@types/index';
+import { Booking } from '@app-types/index';
 import { StatusBadge } from '@features/booking/components/StatusBadge';
 import { formatDateTime } from '@utils/formatDate';
 import { colors } from '@shared/ui/colors';

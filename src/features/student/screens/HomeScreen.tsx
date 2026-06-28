@@ -10,7 +10,7 @@ import { CategoryFilter } from '../components/CategoryFilter';
 import { ArtisanCardSkeleton } from '@shared/components/Loader';
 import { EmptyState } from '@shared/components';
 import { artisanApi } from '@services/api/artisan.api';
-import { ArtisanProfile } from '@types/index';
+import { ArtisanProfile } from '@app-types/index';
 import { useAuthStore } from '@store/auth.store';
 import { Search as SearchIcon } from 'lucide-react-native';
 

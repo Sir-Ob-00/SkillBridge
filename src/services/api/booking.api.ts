@@ -5,7 +5,7 @@ import {
   Booking,
   BookingStatus,
   PaginatedResponse,
-} from '@types/index';
+} from '@app-types/index';
 
 export interface CreateBookingPayload {
   artisanId: string;

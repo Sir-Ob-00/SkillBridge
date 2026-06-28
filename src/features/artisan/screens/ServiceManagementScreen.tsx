@@ -11,7 +11,7 @@ import { EmptyState } from '@shared/components';
 import { Loader } from '@shared/components/Loader';
 import { ServiceForm, ServiceFormValues } from '../components/ServiceForm';
 import { artisanApi } from '@services/api/artisan.api';
-import { Service } from '@types/index';
+import { Service } from '@app-types/index';
 import { useAuthStore } from '@store/auth.store';
 import { formatCurrency } from '@utils/currency';
 

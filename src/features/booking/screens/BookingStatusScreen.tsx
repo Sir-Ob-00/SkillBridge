@@ -6,7 +6,7 @@ import { StudentStackParamList } from '@features/student/student.types';
 import { ScreenWrapper } from '@shared/layout';
 import { Loader } from '@shared/components/Loader';
 import { useBookingStore } from '@store/booking.store';
-import { BookingStatus } from '@types/index';
+import { BookingStatus } from '@app-types/index';
 import { colors } from '@shared/ui/colors';
 import { formatDateTime } from '@utils/formatDate';
 

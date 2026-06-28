@@ -9,7 +9,7 @@ import { ScreenWrapper } from '@shared/layout';
 import { EmptyState } from '@shared/components';
 import { BookingCard } from '../components/BookingCard';
 import { useBookingStore } from '@store/booking.store';
-import { BookingStatus } from '@types/index';
+import { BookingStatus } from '@app-types/index';
 
 type Props = CompositeScreenProps<
   BottomTabScreenProps<StudentTabParamList, 'Bookings'>,

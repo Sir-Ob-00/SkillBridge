@@ -1,4 +1,4 @@
-import { UserRole } from '@types/index';
+import { UserRole } from '@app-types/index';
 
 export type AuthStackParamList = {
   Onboarding: undefined;

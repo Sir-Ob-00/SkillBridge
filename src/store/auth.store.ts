@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { User, UserRole } from '@types/index';
+import { User, UserRole } from '@app-types/index';
 import { CONFIG } from '@constants/config';
 import { secureStorage } from '@services/storage/secureStorage';
 import { authApi, RefreshResponse } from '@features/auth/services/auth.api';

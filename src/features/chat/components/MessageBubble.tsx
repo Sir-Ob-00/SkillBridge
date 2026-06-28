@@ -1,7 +1,7 @@
 import React from 'react';
 import { Text, View } from 'react-native';
 import { Check, CheckCheck } from 'lucide-react-native';
-import { Message } from '@types/index';
+import { Message } from '@app-types/index';
 import { formatTime } from '@utils/formatDate';
 import { colors } from '@shared/ui/colors';
 

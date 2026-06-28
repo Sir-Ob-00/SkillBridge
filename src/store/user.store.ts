@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { User } from '@types/index';
+import { User } from '@app-types/index';
 import { userApi, UpdateProfilePayload } from '@services/api/user.api';
 import { useAuthStore } from './auth.store';
 

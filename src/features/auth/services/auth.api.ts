@@ -1,6 +1,6 @@
 import { apiClient, normalizeError } from './client';
 import { API_ROUTES } from '@constants/apiRoutes';
-import { ApiResponse, User, UserRole } from '@types/index';
+import { ApiResponse, User, UserRole } from '@app-types/index';
 
 export interface LoginPayload {
   email: string;

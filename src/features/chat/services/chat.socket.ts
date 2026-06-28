@@ -1,6 +1,6 @@
 import { socketClient } from '@services/socket/socketClient';
 import { SOCKET_EVENTS } from '@services/socket/events';
-import { Message } from '@types/index';
+import { Message } from '@app-types/index';
 
 export interface SendMessagePayload {
   chatId: string;

@@ -7,7 +7,7 @@ import { MessageBubble } from '../components/MessageBubble';
 import { ChatInput } from '../components/ChatInput';
 import { useChat } from '../hooks/useChat';
 import { chatApi } from '../services/chat.api';
-import { Message } from '@types/index';
+import { Message } from '@app-types/index';
 import { useAuthStore } from '@store/auth.store';
 import { colors } from '@shared/ui/colors';
 import { ChatStackParamList } from '../chat.types';

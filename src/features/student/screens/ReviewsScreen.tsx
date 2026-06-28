@@ -8,7 +8,7 @@ import { Loader } from '@shared/components/Loader';
 import { EmptyState } from '@shared/components';
 import { ReviewCard } from '@features/reviews/components/ReviewCard';
 import { reviewApi } from '@services/api/review.api';
-import { Review } from '@types/index';
+import { Review } from '@app-types/index';
 import { colors } from '@shared/ui/colors';
 
 type Props = NativeStackScreenProps<StudentStackParamList, 'Reviews'>;

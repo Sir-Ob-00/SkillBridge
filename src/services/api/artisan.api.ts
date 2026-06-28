@@ -5,7 +5,7 @@ import {
   ArtisanProfile,
   PaginatedResponse,
   Service,
-} from '@types/index';
+} from '@app-types/index';
 
 export interface ArtisanSearchParams {
   query?: string;

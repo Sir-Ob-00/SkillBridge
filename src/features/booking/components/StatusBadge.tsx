@@ -1,6 +1,6 @@
 import React from 'react';
 import { Text, View } from 'react-native';
-import { BookingStatus } from '@types/index';
+import { BookingStatus } from '@app-types/index';
 
 const STATUS_CONFIG: Record<BookingStatus, { label: string; bg: string; text: string }> = {
   pending: { label: 'Pending', bg: 'bg-yellow-100', text: 'text-yellow-700' },

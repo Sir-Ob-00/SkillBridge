@@ -1,7 +1,7 @@
 import React from 'react';
 import { Text, View } from 'react-native';
 import { Star } from 'lucide-react-native';
-import { Review } from '@types/index';
+import { Review } from '@app-types/index';
 import { formatDate } from '@utils/formatDate';
 import { colors } from '@shared/ui/colors';
 

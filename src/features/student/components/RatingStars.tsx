@@ -11,7 +11,7 @@ interface RatingStarsProps {
 }
 
 export const RatingStars: React.FC<RatingStarsProps> = ({
-  rating,
+  rating = 0,
   reviewCount,
   size = 14,
   showValue = true,
@@ -33,7 +33,7 @@ export const RatingStars: React.FC<RatingStarsProps> = ({
 
       {showValue ? (
         <Text className="ml-1.5 text-xs font-medium text-gray-600">
-          {rating.toFixed(1)}
+          {typeof rating === 'number' ? rating.toFixed(1) : '0.0'}
           {typeof reviewCount === 'number' ? ` (${reviewCount})` : ''}
         </Text>
       ) : null}

@@ -1,6 +1,6 @@
 import { apiClient } from './client';
 import { API_ROUTES } from '@constants/apiRoutes';
-import { ApiResponse, User } from '@types/index';
+import { ApiResponse, User } from '@app-types/index';
 
 export interface UpdateProfilePayload {
   name?: string;

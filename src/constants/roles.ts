@@ -1,4 +1,4 @@
-import { UserRole } from '@types/index';
+import { UserRole } from '@app-types/index';
 
 export const ROLES: Record<string, UserRole> = {
   STUDENT: 'student',

@@ -23,14 +23,14 @@ export default function App() {
       <SafeAreaProvider>
         <ThemeProvider>
           <QueryProvider>
-            <NavigationContainer>
-              <AuthProvider>
-                <SocketProvider>
-                  <StatusBar style="dark" />
+            <SocketProvider>
+              <NavigationContainer>
+                <AuthProvider>
                   <RootNavigator />
-                </SocketProvider>
-              </AuthProvider>
-            </NavigationContainer>
+                </AuthProvider>
+                <StatusBar style="dark" />
+              </NavigationContainer>
+            </SocketProvider>
           </QueryProvider>
         </ThemeProvider>
       </SafeAreaProvider>

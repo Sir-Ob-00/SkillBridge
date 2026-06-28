@@ -8,7 +8,7 @@ import { Button } from '@shared/components';
 import { Loader } from '@shared/components/Loader';
 import { RatingStars } from '../components/RatingStars';
 import { artisanApi } from '@services/api/artisan.api';
-import { ArtisanProfile, Service } from '@types/index';
+import { ArtisanProfile, Service } from '@app-types/index';
 import { formatCurrency } from '@utils/currency';
 import { colors } from '@shared/ui/colors';
 
@@ -77,7 +77,7 @@ export const ArtisanProfileScreen: React.FC<Props> = ({ route, navigation }) => 
         ) : (
           <View className="h-full w-full items-center justify-center bg-primary/10">
             <Text className="text-4xl font-bold text-primary">
-              {artisan.businessName.charAt(0).toUpperCase()}
+              {artisan.businessName?.charAt(0).toUpperCase() ?? 'A'}
             </Text>
           </View>
         )}

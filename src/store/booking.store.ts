@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { Booking, BookingStatus } from '@types/index';
+import { Booking, BookingStatus } from '@app-types/index';
 import {
   bookingApi,
   BookingListParams,

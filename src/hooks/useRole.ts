@@ -1,5 +1,5 @@
 import { useAuthStore } from '@store/auth.store';
-import { UserRole } from '@types/index';
+import { UserRole } from '@app-types/index';
 
 export const useRole = (): UserRole | null => {
   const role = useAuthStore((state) => state.user?.role ?? null);

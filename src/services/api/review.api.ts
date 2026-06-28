@@ -1,6 +1,6 @@
 import { apiClient } from './client';
 import { API_ROUTES } from '@constants/apiRoutes';
-import { ApiResponse, PaginatedResponse, Review } from '@types/index';
+import { ApiResponse, PaginatedResponse, Review } from '@app-types/index';
 
 export interface CreateReviewPayload {
   bookingId: string;

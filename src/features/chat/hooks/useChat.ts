@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Message } from '@types/index';
+import { Message } from '@app-types/index';
 import { chatSocket } from '../services/chat.socket';
 import { useAuthStore } from '@store/auth.store';
 

@@ -9,7 +9,7 @@ import { ScreenWrapper } from '@shared/layout';
 import { RequestCard } from '../components/RequestCard';
 import { EmptyState } from '@shared/components';
 import { useBookingStore } from '@store/booking.store';
-import { BookingStatus } from '@types/index';
+import { BookingStatus } from '@app-types/index';
 
 type Props = CompositeScreenProps<
   BottomTabScreenProps<ArtisanTabParamList, 'Requests'>,
