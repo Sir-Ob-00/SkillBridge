@@ -6,8 +6,8 @@ const extra = (Constants.expoConfig?.extra ?? {}) as {
 };
 
 export const CONFIG = {
-  API_BASE_URL: extra.apiBaseUrl ?? 'https://api.skillbridge.dev',
-  SOCKET_URL: extra.socketUrl ?? 'https://api.skillbridge.dev',
+  API_BASE_URL: 'https://skillbridge-backend-owjk.onrender.com/api/v1',
+  SOCKET_URL: 'https://skillbridge-backend-owjk.onrender.com',
   STORAGE_KEYS: {
     ACCESS_TOKEN: 'skillbridge.accessToken',
     REFRESH_TOKEN: 'skillbridge.refreshToken',

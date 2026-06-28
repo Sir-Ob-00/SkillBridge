@@ -1,9 +1,11 @@
 import { create } from 'zustand';
-import { User } from '@types/index';
+import { User, UserRole } from '@types/index';
 import { CONFIG } from '@constants/config';
 import { secureStorage } from '@services/storage/secureStorage';
-import { authApi, LoginPayload, RegisterPayload } from '@features/auth/services/auth.api';
+import { authApi, RefreshResponse } from '@features/auth/services/auth.api';
 import { socketClient } from '@services/socket/socketClient';
+import { setLogoutHandler as setAuthLogoutHandler } from '@features/auth/services/client';
+import { setLogoutHandler as setApiLogoutHandler } from '@services/api/client';
 
 interface AuthState {
   user: User | null;
@@ -13,8 +15,9 @@ interface AuthState {
   error: string | null;
 
   initialize: () => Promise<void>;
-  login: (payload: LoginPayload) => Promise<void>;
-  register: (payload: RegisterPayload) => Promise<void>;
+  login: (payload: { email: string; password: string }) => Promise<void>;
+  register: (payload: { name: string; email: string; password: string; role: UserRole; phone?: string }) => Promise<void>;
+  refreshToken: () => Promise<void>;
   logout: () => Promise<void>;
   setUser: (user: User | null) => void;
   clearError: () => void;
@@ -79,6 +82,28 @@ export const useAuthStore = create<AuthState>((set) => ({
     }
   },
 
+  refreshToken: async () => {
+    set({ isLoading: true, error: null });
+    try {
+      const storedRefreshToken = await secureStorage.getSecureItem(CONFIG.STORAGE_KEYS.REFRESH_TOKEN);
+      if (!storedRefreshToken) {
+        throw new Error('No refresh token available');
+      }
+
+      const { accessToken, refreshToken } = await authApi.refreshToken(storedRefreshToken);
+
+      await Promise.all([
+        secureStorage.setSecureItem(CONFIG.STORAGE_KEYS.ACCESS_TOKEN, accessToken),
+        secureStorage.setSecureItem(CONFIG.STORAGE_KEYS.REFRESH_TOKEN, refreshToken),
+      ]);
+
+      set({ accessToken, isLoading: false });
+    } catch (err) {
+      await useAuthStore.getState().logout();
+      throw err;
+    }
+  },
+
   logout: async () => {
     const refreshToken = await secureStorage.getSecureItem(
       CONFIG.STORAGE_KEYS.REFRESH_TOKEN
@@ -116,3 +141,6 @@ export const useAuthStore = create<AuthState>((set) => ({
 /** Derived selector — use as `useAuthStore(selectIsAuthenticated)` */
 export const selectIsAuthenticated = (state: AuthState): boolean =>
   !!state.accessToken;
+
+setAuthLogoutHandler(() => useAuthStore.getState().logout());
+setApiLogoutHandler(() => useAuthStore.getState().logout());

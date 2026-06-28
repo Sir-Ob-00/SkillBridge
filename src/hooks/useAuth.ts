@@ -8,6 +8,7 @@ export const useAuth = () => {
   const error = useAuthStore((state) => state.error);
   const login = useAuthStore((state) => state.login);
   const register = useAuthStore((state) => state.register);
+  const refreshToken = useAuthStore((state) => state.refreshToken);
   const logout = useAuthStore((state) => state.logout);
   const clearError = useAuthStore((state) => state.clearError);
 
@@ -19,6 +20,7 @@ export const useAuth = () => {
     error,
     login,
     register,
+    refreshToken,
     logout,
     clearError,
   };

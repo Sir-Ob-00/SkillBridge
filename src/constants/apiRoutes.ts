@@ -5,6 +5,7 @@ export const API_ROUTES = {
     REFRESH: '/auth/refresh',
     LOGOUT: '/auth/logout',
     FORGOT_PASSWORD: '/auth/forgot-password',
+    RESET_PASSWORD: '/auth/reset-password',
   },
   USERS: {
     ME: '/users/me',

@@ -1,4 +1,4 @@
-import { apiClient } from './client';
+import { apiClient, normalizeError } from './client';
 import { API_ROUTES } from '@constants/apiRoutes';
 import { ApiResponse, User, UserRole } from '@types/index';
 
@@ -15,8 +15,22 @@ export interface RegisterPayload {
   phone?: string;
 }
 
+export interface ForgotPasswordPayload {
+  email: string;
+}
+
+export interface ResetPasswordPayload {
+  token: string;
+  password: string;
+}
+
 export interface AuthResponse {
   user: User;
+  accessToken: string;
+  refreshToken: string;
+}
+
+export interface RefreshResponse {
   accessToken: string;
   refreshToken: string;
 }
@@ -38,10 +52,26 @@ export const authApi = {
     return data.data;
   },
 
-  forgotPassword: async (email: string) => {
+  forgotPassword: async (payload: ForgotPasswordPayload) => {
     const { data } = await apiClient.post<ApiResponse<{ message: string }>>(
       API_ROUTES.AUTH.FORGOT_PASSWORD,
-      { email }
+      payload
+    );
+    return data.data;
+  },
+
+  resetPassword: async (payload: ResetPasswordPayload) => {
+    const { data } = await apiClient.post<ApiResponse<{ message: string }>>(
+      API_ROUTES.AUTH.RESET_PASSWORD,
+      payload
+    );
+    return data.data;
+  },
+
+  refreshToken: async (refreshToken: string) => {
+    const { data } = await apiClient.post<ApiResponse<RefreshResponse>>(
+      API_ROUTES.AUTH.REFRESH,
+      { refreshToken }
     );
     return data.data;
   },
@@ -54,3 +84,5 @@ export const authApi = {
     return data.data;
   },
 };
+
+export { normalizeError };

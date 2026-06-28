@@ -26,7 +26,7 @@ export const ForgotPasswordScreen: React.FC<Props> = ({ navigation }) => {
     setIsLoading(true);
 
     try {
-      await authApi.forgotPassword(email);
+      await authApi.forgotPassword({ email });
       setSent(true);
     } catch {
       Alert.alert('Something went wrong', 'Please try again later.');
