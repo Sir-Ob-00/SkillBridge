@@ -3,6 +3,7 @@ import React, { useEffect } from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
+import { NavigationContainer } from '@react-navigation/native';
 import { bootstrapApp } from '@app/bootstrap';
 import {
   AuthProvider,
@@ -22,12 +23,14 @@ export default function App() {
       <SafeAreaProvider>
         <ThemeProvider>
           <QueryProvider>
-            <AuthProvider>
-              <SocketProvider>
-                <StatusBar style="dark" />
-                <RootNavigator />
-              </SocketProvider>
-            </AuthProvider>
+            <NavigationContainer>
+              <AuthProvider>
+                <SocketProvider>
+                  <StatusBar style="dark" />
+                  <RootNavigator />
+                </SocketProvider>
+              </AuthProvider>
+            </NavigationContainer>
           </QueryProvider>
         </ThemeProvider>
       </SafeAreaProvider>
