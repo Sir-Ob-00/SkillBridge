@@ -12,6 +12,25 @@ import {
   SocketProvider,
 } from '@app/providers';
 import { RootNavigator } from '@app/navigation';
+import { FeedbackModal } from '@shared/components';
+import { useFeedbackStore } from '@store/feedback.store';
+
+function FeedbackOverlay() {
+  const { visible, type, title, message, onDismiss, hide } = useFeedbackStore();
+
+  return (
+    <FeedbackModal
+      visible={visible}
+      type={type}
+      title={title}
+      message={message}
+      onDismiss={() => {
+        hide();
+        onDismiss?.();
+      }}
+    />
+  );
+}
 
 export default function App() {
   useEffect(() => {
@@ -30,6 +49,7 @@ export default function App() {
                 </AuthProvider>
                 <StatusBar style="dark" />
               </NavigationContainer>
+              <FeedbackOverlay />
             </SocketProvider>
           </QueryProvider>
         </ThemeProvider>

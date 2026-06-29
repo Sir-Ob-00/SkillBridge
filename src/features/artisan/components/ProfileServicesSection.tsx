@@ -1,33 +1,27 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { Alert, FlatList, Text, View } from 'react-native';
-import { CompositeScreenProps } from '@react-navigation/native';
-import { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
-import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Plus, Package } from 'lucide-react-native';
-import { ArtisanTabParamList, ArtisanStackParamList } from '../artisan.types';
-import { ScreenWrapper } from '@shared/layout';
+import { Service } from '@app-types/index';
 import { Button, Modal } from '@shared/components';
 import { EmptyState } from '@shared/components';
-import { Loader } from '@shared/components/Loader';
-import { ServiceForm, ServiceFormValues } from '../components/ServiceForm';
+import { ServiceForm, ServiceFormValues } from './ServiceForm';
 import { artisanApi } from '@services/api/artisan.api';
-import { Service } from '@app-types/index';
-import { useAuthStore } from '@store/auth.store';
 import { formatCurrency } from '@utils/currency';
+import { colors } from '@shared/ui/colors';
 
-type Props = CompositeScreenProps<
-  BottomTabScreenProps<ArtisanTabParamList, 'Services'>,
-  NativeStackScreenProps<ArtisanStackParamList>
->;
+interface ProfileServicesSectionProps {
+  artisanId: string;
+}
 
-export const ServiceManagementScreen: React.FC<Props> = () => {
-  const artisanId = useAuthStore((state) => state.user?.id ?? '');
+export const ProfileServicesSection: React.FC<ProfileServicesSectionProps> = ({
+  artisanId,
+}) => {
   const [services, setServices] = useState<Service[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const loadServices = () => {
+  const loadServices = useCallback(() => {
     if (!artisanId) return;
     setIsLoading(true);
     artisanApi
@@ -35,11 +29,11 @@ export const ServiceManagementScreen: React.FC<Props> = () => {
       .then(setServices)
       .catch(() => setServices([]))
       .finally(() => setIsLoading(false));
-  };
+  }, [artisanId]);
 
   useEffect(() => {
     loadServices();
-  }, [artisanId]);
+  }, [loadServices]);
 
   const handleCreate = async (values: ServiceFormValues) => {
     setIsSubmitting(true);
@@ -61,13 +55,13 @@ export const ServiceManagementScreen: React.FC<Props> = () => {
   };
 
   return (
-    <ScreenWrapper scrollable={false} contentClassName="pt-2">
-      <View className="mb-6 flex-row items-center justify-between">
-        <Text className="font-heading text-3xl font-bold text-gray-900">
-          My Services
+    <View className="mb-6">
+      <View className="mb-3 flex-row items-center justify-between">
+        <Text className="font-heading text-lg font-bold text-gray-900">
+          Skills & Services
         </Text>
         <Button
-          label="Add"
+          label="Add Service"
           size="sm"
           leftIcon={<Plus size={16} color="#ffffff" />}
           onPress={() => setIsModalVisible(true)}
@@ -75,35 +69,47 @@ export const ServiceManagementScreen: React.FC<Props> = () => {
       </View>
 
       {isLoading ? (
-        <Loader label="Loading services..." />
+        <View className="rounded-2xl bg-white p-6">
+          <Text className="text-center text-sm text-gray-400">
+            Loading services...
+          </Text>
+        </View>
       ) : services.length === 0 ? (
         <EmptyState
           icon={Package}
           title="No services yet"
           description="Add a service so students can start booking you."
-          actionLabel="Add Service"
-          onAction={() => setIsModalVisible(true)}
         />
       ) : (
-        <FlatList
-          data={services}
-          keyExtractor={(item) => item.id}
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={{ paddingBottom: 24 }}
-          renderItem={({ item }) => (
-            <View className="mb-4 rounded-3xl border border-transparent bg-white p-5 shadow-sm shadow-gray-200">
-              <Text className="text-lg font-bold text-gray-900">
+        <View className="gap-3">
+          {services.map((item) => (
+            <View
+              key={item.id}
+              className="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm shadow-gray-200"
+            >
+              <Text className="text-base font-bold text-gray-900">
                 {item.title}
               </Text>
               <Text className="mt-1 text-sm text-gray-500" numberOfLines={2}>
                 {item.description}
               </Text>
-              <Text className="mt-2 text-sm font-medium text-primary">
-                {formatCurrency(item.price)} · {item.durationMinutes} min
-              </Text>
+              <View className="mt-2 flex-row items-center">
+                <Text className="text-sm font-semibold text-primary">
+                  {formatCurrency(item.price)}
+                </Text>
+                <Text className="mx-1 text-sm text-gray-400">·</Text>
+                <Text className="text-sm text-gray-500">
+                  {item.durationMinutes} min
+                </Text>
+                <View className="ml-2 rounded-full bg-gray-100 px-2 py-0.5">
+                  <Text className="text-[10px] font-medium text-gray-600 uppercase">
+                    {item.category}
+                  </Text>
+                </View>
+              </View>
             </View>
-          )}
-        />
+          ))}
+        </View>
       )}
 
       <Modal
@@ -112,8 +118,12 @@ export const ServiceManagementScreen: React.FC<Props> = () => {
         title="New Service"
         placement="bottom"
       >
-        <ServiceForm onSubmit={handleCreate} isSubmitting={isSubmitting} submitLabel="Add Service" />
+        <ServiceForm
+          onSubmit={handleCreate}
+          isSubmitting={isSubmitting}
+          submitLabel="Add Service"
+        />
       </Modal>
-    </ScreenWrapper>
+    </View>
   );
 };

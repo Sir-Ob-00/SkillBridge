@@ -1,19 +1,18 @@
 import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { LayoutDashboard, Inbox, Package, Wallet, User } from 'lucide-react-native';
+import { LayoutDashboard, Inbox, MessageCircle, Wallet, User } from 'lucide-react-native';
 import { ArtisanTabParamList, ArtisanStackParamList } from '@features/artisan/artisan.types';
 import { DashboardScreen } from '@features/artisan/screens/DashboardScreen';
 import { RequestsScreen } from '@features/artisan/screens/RequestsScreen';
-import { ServiceManagementScreen } from '@features/artisan/screens/ServiceManagementScreen';
 import { EarningsScreen } from '@features/artisan/screens/EarningsScreen';
 import { ArtisanProfileScreen } from '@features/artisan/screens/ArtisanProfileScreen';
 import { ProfileSetupScreen } from '@features/artisan/screens/ProfileSetupScreen';
 import { AvailabilityScreen } from '@features/artisan/screens/AvailabilityScreen';
+import { ArtisanSettingsScreen } from '@features/artisan/screens/ArtisanSettingsScreen';
+import { ArtisanChatListScreen } from '@features/artisan/screens/ArtisanChatListScreen';
 import { BookingDetailsScreen } from '@features/booking/screens/BookingDetailsScreen';
-import { ChatListScreen } from '@features/chat/screens/ChatListScreen';
 import { ChatRoomScreen } from '@features/chat/screens/ChatRoomScreen';
-import { SettingsScreen } from '@shared/screens/SettingsScreen';
 import { NotificationsScreen } from '@shared/screens/NotificationsScreen';
 import { colors } from '@shared/ui/colors';
 
@@ -43,9 +42,9 @@ const ArtisanTabs: React.FC = () => {
         options={{ tabBarIcon: ({ color, size }) => <Inbox color={color} size={size} /> }}
       />
       <Tab.Screen
-        name="Services"
-        component={ServiceManagementScreen}
-        options={{ tabBarIcon: ({ color, size }) => <Package color={color} size={size} /> }}
+        name="Chat"
+        component={ArtisanChatListScreen}
+        options={{ tabBarIcon: ({ color, size }) => <MessageCircle color={color} size={size} /> }}
       />
       <Tab.Screen
         name="Earnings"
@@ -68,9 +67,8 @@ export const ArtisanNavigator: React.FC = () => {
       <Stack.Screen name="ProfileSetup" component={ProfileSetupScreen} />
       <Stack.Screen name="Availability" component={AvailabilityScreen} />
       <Stack.Screen name="BookingDetails" component={BookingDetailsScreen} />
-      <Stack.Screen name="ChatList" component={ChatListScreen} />
       <Stack.Screen name="ChatRoom" component={ChatRoomScreen} />
-      <Stack.Screen name="Settings" component={SettingsScreen} />
+      <Stack.Screen name="Settings" component={ArtisanSettingsScreen} />
       <Stack.Screen name="Notifications" component={NotificationsScreen} />
     </Stack.Navigator>
   );

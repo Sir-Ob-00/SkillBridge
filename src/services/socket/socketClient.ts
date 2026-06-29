@@ -33,8 +33,30 @@ class SocketClient {
       logger.warn('Socket disconnected', reason);
     });
 
-    this.socket.on(SOCKET_EVENTS.CONNECT_ERROR, (err) => {
+    this.socket.on(SOCKET_EVENTS.CONNECT_ERROR, async (err) => {
       logger.error('Socket connect error', err.message);
+
+      const message = err.message?.toLowerCase() ?? '';
+      const isAuthError =
+        message.includes('token') ||
+        message.includes('unauthorized') ||
+        message.includes('expired') ||
+        message.includes('invalid');
+
+      if (!isAuthError || !this.socket) return;
+
+      try {
+        const freshToken = await secureStorage.getSecureItem(
+          CONFIG.STORAGE_KEYS.ACCESS_TOKEN
+        );
+        if (freshToken) {
+          this.socket.auth = { token: freshToken };
+        } else {
+          this.disconnect();
+        }
+      } catch {
+        this.disconnect();
+      }
     });
 
     return this.socket;

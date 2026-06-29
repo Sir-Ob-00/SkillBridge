@@ -22,6 +22,7 @@ export interface ArtisanProfile {
   priceFrom: number;
   location: string;
   avatarUrl?: string;
+  profileImageUrl?: string;
   services: Service[];
   isVerified: boolean;
 }
@@ -71,6 +72,15 @@ export interface Message {
   text: string;
   createdAt: string;
   status: 'sent' | 'delivered' | 'read';
+}
+
+export interface PortfolioItem {
+  id: string;
+  artisanId: string;
+  imageUrl: string;
+  title: string;
+  description?: string;
+  createdAt: string;
 }
 
 export interface Chat {

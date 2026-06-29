@@ -4,3 +4,4 @@ export * from './Modal';
 export * from './Avatar';
 export * from './Loader';
 export * from './EmptyState';
+export * from './FeedbackModal';

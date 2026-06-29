@@ -1,17 +1,18 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Text, View } from 'react-native';
 import { CompositeScreenProps } from '@react-navigation/native';
 import { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { Calendar, Star, Wallet } from 'lucide-react-native';
 import { ArtisanTabParamList, ArtisanStackParamList } from '../artisan.types';
 import { ScreenWrapper } from '@shared/layout';
-import { RequestCard } from '../components/RequestCard';
-import { EmptyState } from '@shared/components';
-import { useBookingStore } from '@store/booking.store';
 import { useAuthStore } from '@store/auth.store';
-import { formatCurrency } from '@utils/currency';
-import { colors } from '@shared/ui/colors';
+import { useBookingStore } from '@store/booking.store';
+import { chatApi } from '@features/chat/services/chat.api';
+import { artisanApi } from '@services/api/artisan.api';
+import { Chat } from '@app-types/index';
+import { DashboardUrgentActions } from '../components/DashboardUrgentActions';
+import { DashboardQuickStats } from '../components/DashboardQuickStats';
+import { DashboardTodaysJobs } from '../components/DashboardTodaysJobs';
 
 type Props = CompositeScreenProps<
   BottomTabScreenProps<ArtisanTabParamList, 'Dashboard'>,
@@ -20,79 +21,53 @@ type Props = CompositeScreenProps<
 
 export const DashboardScreen: React.FC<Props> = ({ navigation }) => {
   const userName = useAuthStore((state) => state.user?.name?.split(' ')[0]);
+  const initial = userName?.charAt(0) ?? 'A';
   const { bookings, fetchBookings } = useBookingStore();
+  const [earnings, setEarnings] = useState<{ total: number; thisMonth: number; pending: number } | null>(null);
+  const [chats, setChats] = useState<Chat[]>([]);
 
   useEffect(() => {
-    void fetchBookings({ status: 'pending' });
+    void fetchBookings({});
+    artisanApi.getEarnings().then(setEarnings).catch(() => {});
+    chatApi.listChats().then(setChats).catch(() => {});
   }, [fetchBookings]);
-
-  const pendingBookings = bookings.filter((b) => b.status === 'pending').slice(0, 3);
 
   return (
     <ScreenWrapper scrollable contentClassName="pt-2">
       <View className="mb-6 flex-row items-center justify-between">
         <View>
-          <Text className="text-sm font-medium text-gray-500 uppercase tracking-wider">Overview,</Text>
-          <Text className="mt-1 font-heading text-3xl font-bold text-gray-900">
+          <Text className="text-sm font-medium tracking-wide text-gray-500">
+            Dashboard
+          </Text>
+          <Text className="mt-0.5 font-heading text-3xl font-bold text-gray-900">
             {userName ?? 'Artisan'} 👋
           </Text>
         </View>
-        <View className="h-12 w-12 items-center justify-center rounded-full bg-secondary/20 border border-secondary/30">
-          <Text className="text-lg font-bold text-secondary">{userName?.charAt(0) ?? 'A'}</Text>
+        <View className="h-12 w-12 items-center justify-center rounded-full bg-primary/10">
+          <Text className="text-lg font-bold text-primary">{initial}</Text>
         </View>
       </View>
 
-      <View className="mb-6 flex-row gap-3">
-        <View className="flex-1 rounded-3xl border border-transparent bg-white p-5 shadow-sm shadow-gray-200">
-          <View className="mb-2 h-9 w-9 items-center justify-center rounded-full bg-primary/10">
-            <Calendar size={18} color={colors.primary} />
-          </View>
-          <Text className="text-xs text-gray-500">Pending</Text>
-          <Text className="text-lg font-bold text-gray-900">
-            {bookings.filter((b) => b.status === 'pending').length}
-          </Text>
-        </View>
+      <DashboardUrgentActions
+        bookings={bookings}
+        chats={chats}
+        onViewRequest={(id) =>
+          navigation.navigate('BookingDetails', { bookingId: id })
+        }
+        onViewChat={() => navigation.navigate('Chat')}
+      />
 
-        <View className="flex-1 rounded-3xl border border-transparent bg-white p-5 shadow-sm shadow-gray-200">
-          <View className="mb-2 h-9 w-9 items-center justify-center rounded-full bg-secondary/20">
-            <Star size={18} color={colors.secondary} />
-          </View>
-          <Text className="text-xs text-gray-500">Rating</Text>
-          <Text className="text-lg font-bold text-gray-900">4.8</Text>
-        </View>
+      <DashboardQuickStats
+        bookings={bookings}
+        earningsThisMonth={earnings?.thisMonth ?? 0}
+      />
 
-        <View className="flex-1 rounded-3xl border border-transparent bg-white p-5 shadow-sm shadow-gray-200">
-          <View className="mb-2 h-9 w-9 items-center justify-center rounded-full bg-success/10">
-            <Wallet size={18} color={colors.success} />
-          </View>
-          <Text className="text-xs text-gray-500">Earnings</Text>
-          <Text className="text-lg font-bold text-gray-900">
-            {formatCurrency(0)}
-          </Text>
-        </View>
-      </View>
-
-      <Text className="mb-3 text-lg font-semibold text-gray-900">
-        Recent requests
-      </Text>
-
-      {pendingBookings.length === 0 ? (
-        <EmptyState
-          icon={Calendar}
-          title="No pending requests"
-          description="New booking requests will appear here."
-        />
-      ) : (
-        pendingBookings.map((booking) => (
-          <RequestCard
-            key={booking.id}
-            booking={booking}
-            onPress={() =>
-              navigation.navigate('BookingDetails', { bookingId: booking.id })
-            }
-          />
-        ))
-      )}
+      <DashboardTodaysJobs
+        bookings={bookings}
+        onViewDetails={(id) =>
+          navigation.navigate('BookingDetails', { bookingId: id })
+        }
+      />
     </ScreenWrapper>
   );
 };

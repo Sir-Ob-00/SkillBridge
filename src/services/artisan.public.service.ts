@@ -1,12 +1,19 @@
-import { apiClient } from './client';
+import { apiClient } from './api/client';
 import { API_ROUTES } from '@constants/apiRoutes';
 import {
   ApiResponse,
   ArtisanProfile,
   PaginatedResponse,
   PortfolioItem,
+  Review,
   Service,
 } from '@app-types/index';
+
+export interface AvailabilitySlot {
+  day: string;
+  startTime: string;
+  endTime: string;
+}
 
 export interface ArtisanSearchParams {
   query?: string;
@@ -15,13 +22,7 @@ export interface ArtisanSearchParams {
   pageSize?: number;
 }
 
-export interface AvailabilitySlot {
-  day: string; // e.g. "monday"
-  startTime: string; // "09:00"
-  endTime: string; // "17:00"
-}
-
-export const artisanApi = {
+export const artisanPublicService = {
   list: async (params: ArtisanSearchParams = {}) => {
     const { data } = await apiClient.get<
       ApiResponse<PaginatedResponse<ArtisanProfile>>
@@ -43,14 +44,6 @@ export const artisanApi = {
     return data.data;
   },
 
-  createService: async (id: string, payload: Omit<Service, 'id' | 'artisanId'>) => {
-    const { data } = await apiClient.post<ApiResponse<Service>>(
-      API_ROUTES.ARTISANS.SERVICES(id),
-      payload
-    );
-    return data.data;
-  },
-
   getAvailability: async (id: string) => {
     const { data } = await apiClient.get<ApiResponse<AvailabilitySlot[]>>(
       API_ROUTES.ARTISANS.AVAILABILITY(id)
@@ -58,40 +51,16 @@ export const artisanApi = {
     return data.data;
   },
 
-  updateAvailability: async (id: string, slots: AvailabilitySlot[]) => {
-    const { data } = await apiClient.put<ApiResponse<AvailabilitySlot[]>>(
-      API_ROUTES.ARTISANS.AVAILABILITY(id),
-      { slots }
-    );
-    return data.data;
-  },
-
-  getEarnings: async () => {
+  getReviews: async (id: string, page = 1, pageSize = 20) => {
     const { data } = await apiClient.get<
-      ApiResponse<{ total: number; thisMonth: number; pending: number }>
-    >(API_ROUTES.ARTISANS.EARNINGS);
+      ApiResponse<PaginatedResponse<Review>>
+    >(API_ROUTES.REVIEWS.LIST(id), { params: { page, pageSize } });
     return data.data;
   },
 
   getPortfolio: async (id: string) => {
     const { data } = await apiClient.get<ApiResponse<PortfolioItem[]>>(
       API_ROUTES.ARTISANS.PORTFOLIO(id)
-    );
-    return data.data;
-  },
-
-  addPortfolioItem: async (id: string, payload: FormData) => {
-    const { data } = await apiClient.post<ApiResponse<PortfolioItem>>(
-      API_ROUTES.ARTISANS.PORTFOLIO(id),
-      payload,
-      { headers: { 'Content-Type': 'multipart/form-data' } }
-    );
-    return data.data;
-  },
-
-  removePortfolioItem: async (id: string, itemId: string) => {
-    const { data } = await apiClient.delete<ApiResponse<void>>(
-      API_ROUTES.ARTISANS.PORTFOLIO_ITEM(id, itemId)
     );
     return data.data;
   },

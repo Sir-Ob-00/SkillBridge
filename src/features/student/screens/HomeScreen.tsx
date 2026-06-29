@@ -6,7 +6,11 @@ import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { StudentTabParamList, StudentStackParamList } from '../student.types';
 import { ScreenWrapper } from '@shared/layout';
 import { ArtisanCard } from '../components/ArtisanCard';
+import { HomeGreeting } from '../components/HomeGreeting';
+import { SearchCard } from '../components/SearchCard';
 import { CategoryFilter } from '../components/CategoryFilter';
+import { FeaturedArtisans } from '../components/FeaturedArtisans';
+import { PromoBanner } from '../components/PromoBanner';
 import { ArtisanCardSkeleton } from '@shared/components/Loader';
 import { EmptyState } from '@shared/components';
 import { artisanApi } from '@services/api/artisan.api';
@@ -49,58 +53,75 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
     setIsRefreshing(false);
   };
 
-  return (
-    <ScreenWrapper
-      scrollable={false}
-      contentClassName="pt-2"
-    >
-      <View className="mb-6 flex-row items-center justify-between">
-        <View>
-          <Text className="text-sm font-medium text-gray-500 uppercase tracking-wider">Welcome back,</Text>
-          <Text className="mt-1 font-heading text-3xl font-bold text-gray-900">
-            {userName ?? 'Student'} 👋
-          </Text>
-        </View>
-        <View className="h-12 w-12 items-center justify-center rounded-full bg-primary/10 border border-primary/20">
-          <Text className="text-lg font-bold text-primary">{userName?.charAt(0) ?? 'S'}</Text>
-        </View>
-      </View>
+  const navigateToSearch = () => {
+    navigation.navigate('Search');
+  };
 
+  const navigateToArtisanProfile = (artisanId: string) => {
+    navigation.navigate('ArtisanProfile', { artisanId });
+  };
+
+  const headerContent = (
+    <View className="pt-2">
+      <HomeGreeting name={userName} />
+      <SearchCard onPress={navigateToSearch} />
+
+      <Text className="mb-3 font-heading text-lg font-bold text-gray-900">
+        Browse Categories
+      </Text>
       <CategoryFilter
         selectedCategory={selectedCategory}
         onSelectCategory={setSelectedCategory}
       />
 
-      {isLoading ? (
-        <View>
-          {Array.from({ length: 3 }).map((_, i) => (
-            <ArtisanCardSkeleton key={i} />
-          ))}
-        </View>
-      ) : artisans.length === 0 ? (
-        <EmptyState
-          icon={SearchIcon}
-          title="No artisans found"
-          description="Try a different category or check back later."
+      <View className="mt-6">
+        <FeaturedArtisans
+          artisans={artisans}
+          isLoading={isLoading}
+          onPress={navigateToArtisanProfile}
         />
-      ) : (
-        <FlatList
-          data={artisans}
-          keyExtractor={(item) => item.id}
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={{ paddingBottom: 24 }}
-          refreshing={isRefreshing}
-          onRefresh={handleRefresh}
-          renderItem={({ item }) => (
-            <ArtisanCard
-              artisan={item}
-              onPress={() =>
-                navigation.navigate('ArtisanProfile', { artisanId: item.id })
-              }
-            />
-          )}
-        />
-      )}
+      </View>
+
+      <PromoBanner onExplore={navigateToSearch} />
+
+      <Text className="mb-4 font-heading text-lg font-bold text-gray-900">
+        All Artisans
+      </Text>
+    </View>
+  );
+
+  const emptyContent = isLoading ? (
+    <View className="px-4">
+      {Array.from({ length: 3 }).map((_, i) => (
+        <ArtisanCardSkeleton key={i} />
+      ))}
+    </View>
+  ) : (
+    <EmptyState
+      icon={SearchIcon}
+      title="No artisans available"
+      description="We're onboarding skilled professionals. Check back soon."
+    />
+  );
+
+  return (
+    <ScreenWrapper scrollable={false} contentClassName="pt-2">
+      <FlatList
+        data={isLoading ? [] : artisans}
+        keyExtractor={(item) => item.id}
+        ListHeaderComponent={headerContent}
+        ListEmptyComponent={emptyContent}
+        renderItem={({ item }) => (
+          <ArtisanCard
+            artisan={item}
+            onPress={() => navigateToArtisanProfile(item.id)}
+          />
+        )}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingBottom: 24 }}
+        refreshing={isRefreshing}
+        onRefresh={handleRefresh}
+      />
     </ScreenWrapper>
   );
 };

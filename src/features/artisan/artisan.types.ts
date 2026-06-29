@@ -1,7 +1,7 @@
 export type ArtisanTabParamList = {
   Dashboard: undefined;
   Requests: undefined;
-  Services: undefined;
+  Chat: undefined;
   Earnings: undefined;
   Profile: undefined;
 };
@@ -11,7 +11,6 @@ export type ArtisanStackParamList = {
   ProfileSetup: undefined;
   Availability: undefined;
   BookingDetails: { bookingId: string };
-  ChatList: undefined;
   ChatRoom: { chatId: string; otherUserName: string };
   Settings: undefined;
   Notifications: undefined;

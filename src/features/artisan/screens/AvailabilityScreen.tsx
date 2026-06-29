@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { Alert, Pressable, Text } from 'react-native';
+import { Alert, Pressable, Switch, Text, View } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { ArrowLeft } from 'lucide-react-native';
+import { ArrowLeft, Sun, Umbrella } from 'lucide-react-native';
 import { ArtisanStackParamList } from '../artisan.types';
 import { ScreenWrapper } from '@shared/layout';
 import { Button } from '@shared/components';
@@ -18,6 +18,8 @@ export const AvailabilityScreen: React.FC<Props> = ({ navigation }) => {
   const [slots, setSlots] = useState<AvailabilitySlot[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [holidayMode, setHolidayMode] = useState(false);
+  const [instantAvailable, setInstantAvailable] = useState(false);
 
   useEffect(() => {
     if (!artisanId) return;
@@ -31,7 +33,8 @@ export const AvailabilityScreen: React.FC<Props> = ({ navigation }) => {
   const handleSave = async () => {
     setIsSaving(true);
     try {
-      await artisanApi.updateAvailability(artisanId, slots);
+      const dataToSave = holidayMode ? [] : slots;
+      await artisanApi.updateAvailability(artisanId, dataToSave);
       Alert.alert('Saved', 'Your availability has been updated.');
     } catch {
       Alert.alert('Failed to save', 'Please try again.');
@@ -54,7 +57,57 @@ export const AvailabilityScreen: React.FC<Props> = ({ navigation }) => {
         Availability
       </Text>
 
-      <CalendarPicker slots={slots} onChange={setSlots} />
+      {/* Holiday Mode Toggle */}
+      <View className="mb-4 flex-row items-center justify-between rounded-2xl border border-gray-100 bg-white p-4 shadow-sm shadow-gray-200">
+        <View className="flex-row items-center">
+          <View className="mr-3 h-10 w-10 items-center justify-center rounded-xl bg-amber-50">
+            <Umbrella size={20} color="#d97706" />
+          </View>
+          <View>
+            <Text className="text-sm font-semibold text-gray-900">
+              Holiday Mode
+            </Text>
+            <Text className="text-xs text-gray-500">
+              Hide from search until turned off
+            </Text>
+          </View>
+        </View>
+        <Switch
+          value={holidayMode}
+          onValueChange={setHolidayMode}
+          trackColor={{ false: colors.gray200, true: '#d97706' }}
+          thumbColor="#ffffff"
+        />
+      </View>
+
+      {/* Instant Availability Toggle */}
+      <View className="mb-6 flex-row items-center justify-between rounded-2xl border border-gray-100 bg-white p-4 shadow-sm shadow-gray-200">
+        <View className="flex-row items-center">
+          <View className="mr-3 h-10 w-10 items-center justify-center rounded-xl bg-success/10">
+            <Sun size={20} color={colors.success} />
+          </View>
+          <View>
+            <Text className="text-sm font-semibold text-gray-900">
+              Available Now
+            </Text>
+            <Text className="text-xs text-gray-500">
+              Mark yourself as instantly available
+            </Text>
+          </View>
+        </View>
+        <Switch
+          value={instantAvailable}
+          onValueChange={setInstantAvailable}
+          trackColor={{ false: colors.gray200, true: colors.success }}
+          thumbColor="#ffffff"
+        />
+      </View>
+
+      <CalendarPicker
+        slots={slots}
+        onChange={setSlots}
+        holidayMode={holidayMode}
+      />
 
       <Button
         label="Save Availability"

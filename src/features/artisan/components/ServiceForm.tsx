@@ -30,7 +30,7 @@ export const ServiceForm: React.FC<ServiceFormProps> = ({
   const [durationMinutes, setDurationMinutes] = useState(
     initialValues?.durationMinutes ?? ''
   );
-  const [category, setCategory] = useState(initialValues?.category ?? CATEGORIES[0].id);
+  const [category, setCategory] = useState(initialValues?.category ?? '');
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const handleSubmit = () => {
@@ -50,11 +50,25 @@ export const ServiceForm: React.FC<ServiceFormProps> = ({
     ) {
       nextErrors.durationMinutes = 'Enter a valid duration.';
     }
+    if (category.trim().length < 2) {
+      nextErrors.category = 'Enter at least one skill or category.';
+    }
 
     setErrors(nextErrors);
     if (Object.keys(nextErrors).length > 0) return;
 
     onSubmit({ title, description, price, durationMinutes, category });
+  };
+
+  const selectSuggestion = (suggestion: string) => {
+    const existing = category
+      .split(',')
+      .map((s) => s.trim())
+      .filter(Boolean);
+    if (!existing.includes(suggestion)) {
+      existing.push(suggestion);
+      setCategory(existing.join(', '));
+    }
   };
 
   return (
@@ -102,14 +116,27 @@ export const ServiceForm: React.FC<ServiceFormProps> = ({
         </View>
       </View>
 
-      <Text className="mb-1.5 text-sm font-medium text-gray-700">Category</Text>
+      <Input
+        label="Skills & Categories"
+        placeholder="e.g. Plumbing, Pipe fitting, Leak repair"
+        value={category}
+        onChangeText={setCategory}
+        error={errors.category}
+      />
+
+      <Text className="mb-1.5 text-sm font-medium text-gray-700">
+        Suggested categories
+      </Text>
       <View className="mb-4 flex-row flex-wrap gap-2">
         {CATEGORIES.map((cat) => {
-          const isSelected = category === cat.id;
+          const isSelected = category
+            .split(',')
+            .map((s) => s.trim())
+            .includes(cat.id);
           return (
             <Pressable
               key={cat.id}
-              onPress={() => setCategory(cat.id)}
+              onPress={() => selectSuggestion(cat.id)}
               className={[
                 'rounded-full px-3 py-1.5',
                 isSelected ? 'bg-primary' : 'bg-white border border-gray-200',
