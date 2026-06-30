@@ -1,6 +1,28 @@
 import React from 'react';
-import { Pressable, ScrollView, Text } from 'react-native';
+import { Pressable, ScrollView, Text, View } from 'react-native';
+import {
+  BookOpen,
+  Camera,
+  PenTool,
+  Scissors,
+  Shirt,
+  Smartphone,
+  SprayCan,
+  Utensils,
+} from 'lucide-react-native';
 import { CATEGORIES } from '@constants/categories';
+import { colors } from '@shared/ui/colors';
+
+const iconMap: Record<string, React.FC<{ size: number; color: string }>> = {
+  scissors: Scissors,
+  'pen-tool': PenTool,
+  'book-open': BookOpen,
+  shirt: Shirt,
+  camera: Camera,
+  utensils: Utensils,
+  'spray-can': SprayCan,
+  smartphone: Smartphone,
+};
 
 interface CategoryFilterProps {
   selectedCategory: string | null;
@@ -16,18 +38,20 @@ export const CategoryFilter: React.FC<CategoryFilterProps> = ({
       horizontal
       showsHorizontalScrollIndicator={false}
       className="mb-4"
-      contentContainerClassName="gap-2 pr-4"
+      contentContainerClassName="gap-3 pr-4"
     >
       <Pressable
         onPress={() => onSelectCategory(null)}
         className={[
-          'rounded-full px-5 py-2.5',
-          selectedCategory === null ? 'bg-primary shadow-sm shadow-primary/20' : 'bg-gray-100 border border-transparent',
+          'flex-row items-center rounded-2xl px-5 py-3',
+          selectedCategory === null
+            ? 'bg-primary shadow-sm shadow-primary/20'
+            : 'border border-gray-200 bg-white',
         ].join(' ')}
       >
         <Text
           className={[
-            'text-sm font-medium',
+            'text-sm font-semibold',
             selectedCategory === null ? 'text-white' : 'text-gray-700',
           ].join(' ')}
         >
@@ -37,18 +61,28 @@ export const CategoryFilter: React.FC<CategoryFilterProps> = ({
 
       {CATEGORIES.map((category) => {
         const isSelected = selectedCategory === category.id;
+        const IconComponent = iconMap[category.icon];
+
         return (
           <Pressable
             key={category.id}
             onPress={() => onSelectCategory(category.id)}
             className={[
-              'rounded-full px-5 py-2.5',
-              isSelected ? 'bg-primary shadow-sm shadow-primary/20' : 'bg-gray-100 border border-transparent',
+              'flex-row items-center rounded-2xl px-5 py-3',
+              isSelected
+                ? 'bg-primary shadow-sm shadow-primary/20'
+                : 'border border-gray-200 bg-white',
             ].join(' ')}
           >
+            {IconComponent ? (
+              <IconComponent
+                size={18}
+                color={isSelected ? '#ffffff' : colors.primary}
+              />
+            ) : null}
             <Text
               className={[
-                'text-sm font-medium',
+                'ml-2 text-sm font-semibold',
                 isSelected ? 'text-white' : 'text-gray-700',
               ].join(' ')}
             >

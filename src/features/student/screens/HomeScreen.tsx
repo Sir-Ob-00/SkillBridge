@@ -16,6 +16,7 @@ import { EmptyState } from '@shared/components';
 import { artisanApi } from '@services/api/artisan.api';
 import { ArtisanProfile } from '@app-types/index';
 import { useAuthStore } from '@store/auth.store';
+import { useFavorites } from '../hooks/useFavorites';
 import { Search as SearchIcon } from 'lucide-react-native';
 
 type Props = CompositeScreenProps<
@@ -25,6 +26,7 @@ type Props = CompositeScreenProps<
 
 export const HomeScreen: React.FC<Props> = ({ navigation }) => {
   const userName = useAuthStore((state) => state.user?.name?.split(' ')[0]);
+  const { isFavorite, toggleFavorite } = useFavorites();
   const [artisans, setArtisans] = useState<ArtisanProfile[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -114,6 +116,8 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
         renderItem={({ item }) => (
           <ArtisanCard
             artisan={item}
+            isFavorite={isFavorite(item.id)}
+            onToggleFavorite={() => toggleFavorite(item.id)}
             onPress={() => navigateToArtisanProfile(item.id)}
           />
         )}

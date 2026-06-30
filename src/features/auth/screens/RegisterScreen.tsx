@@ -21,6 +21,7 @@ export const RegisterScreen: React.FC<Props> = ({ navigation, route }) => {
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   const handleRegister = async () => {
@@ -32,6 +33,11 @@ export const RegisterScreen: React.FC<Props> = ({ navigation, route }) => {
     if (phone && !validatePhone(phone)) errors.phone = 'Enter a valid phone number.';
     if (!validatePassword(password)) {
       errors.password = 'Password must be at least 8 characters.';
+    }
+    if (!confirmPassword) {
+      errors.confirmPassword = 'Confirm your password.';
+    } else if (password !== confirmPassword) {
+      errors.confirmPassword = 'Passwords do not match.';
     }
 
     setFieldErrors(errors);
@@ -95,6 +101,16 @@ export const RegisterScreen: React.FC<Props> = ({ navigation, route }) => {
         value={password}
         onChangeText={setPassword}
         error={fieldErrors.password}
+        leftIcon={<Lock size={18} color={colors.gray400} />}
+      />
+
+      <Input
+        label="Confirm Password"
+        placeholder="Re-enter your password"
+        isPassword
+        value={confirmPassword}
+        onChangeText={setConfirmPassword}
+        error={fieldErrors.confirmPassword}
         leftIcon={<Lock size={18} color={colors.gray400} />}
       />
 

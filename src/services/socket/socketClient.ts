@@ -4,8 +4,15 @@ import { secureStorage } from '@services/storage/secureStorage';
 import { logger } from '@utils/logger';
 import { SOCKET_EVENTS } from './events';
 
+type AuthErrorHandler = () => Promise<void>;
+
 class SocketClient {
   private socket: Socket | null = null;
+  private onAuthError: AuthErrorHandler | null = null;
+
+  onAuthErrorHandler(handler: AuthErrorHandler): void {
+    this.onAuthError = handler;
+  }
 
   async connect(): Promise<Socket> {
     if (this.socket?.connected) {
@@ -30,11 +37,11 @@ class SocketClient {
     });
 
     this.socket.on(SOCKET_EVENTS.DISCONNECT, (reason) => {
-      logger.warn('Socket disconnected', reason);
+      logger.info('Socket disconnected', reason);
     });
 
     this.socket.on(SOCKET_EVENTS.CONNECT_ERROR, async (err) => {
-      logger.error('Socket connect error', err.message);
+      logger.info('Socket connect error', err.message);
 
       const message = err.message?.toLowerCase() ?? '';
       const isAuthError =
@@ -43,19 +50,10 @@ class SocketClient {
         message.includes('expired') ||
         message.includes('invalid');
 
-      if (!isAuthError || !this.socket) return;
+      if (!isAuthError) return;
 
-      try {
-        const freshToken = await secureStorage.getSecureItem(
-          CONFIG.STORAGE_KEYS.ACCESS_TOKEN
-        );
-        if (freshToken) {
-          this.socket.auth = { token: freshToken };
-        } else {
-          this.disconnect();
-        }
-      } catch {
-        this.disconnect();
+      if (this.onAuthError) {
+        await this.onAuthError();
       }
     });
 

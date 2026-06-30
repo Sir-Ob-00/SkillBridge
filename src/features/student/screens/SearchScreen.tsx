@@ -31,9 +31,7 @@ export const SearchScreen: React.FC<Props> = ({ navigation }) => {
   const debouncedQuery = useDebounce(query, 400);
 
   useEffect(() => {
-    if (!debouncedQuery.trim() && !selectedCategory) {
-      setResults([]);
-      setHasSearched(false);
+    if (!hasSearched && !debouncedQuery.trim() && !selectedCategory) {
       return;
     }
 

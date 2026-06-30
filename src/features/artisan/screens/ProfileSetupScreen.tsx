@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Alert, Image, Pressable, Text, View } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import * as ImagePicker from 'expo-image-picker';
@@ -15,15 +15,34 @@ type Props = NativeStackScreenProps<ArtisanStackParamList, 'ProfileSetup'>;
 
 export const ProfileSetupScreen: React.FC<Props> = ({ navigation }) => {
   const updateProfile = useUserStore((state) => state.updateProfile);
-  const isLoading = useUserStore((state) => state.isLoading);
 
   const [businessName, setBusinessName] = useState('');
   const [bio, setBio] = useState('');
   const [location, setLocation] = useState('');
+  const [yearsOfExperience, setYearsOfExperience] = useState('');
   const [category, setCategory] = useState(CATEGORIES[0].id);
   const [pendingImage, setPendingImage] = useState<string | null>(null);
   const [profileImageUrl, setProfileImageUrl] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+
+  useEffect(() => {
+    artisanService
+      .getMyProfile()
+      .then((profile) => {
+        setBusinessName(profile.businessName || '');
+        setBio(profile.bio || '');
+        setLocation(profile.location || '');
+        setCategory(profile.category || CATEGORIES[0].id);
+        setYearsOfExperience(
+          profile.yearsOfExperience != null ? String(profile.yearsOfExperience) : ''
+        );
+        setProfileImageUrl(profile.profileImageUrl ?? null);
+      })
+      .catch((err) => {
+        console.error('[ProfileSetupScreen] Failed to load profile', err);
+      });
+  }, []);
 
   const handlePickImage = async () => {
     const permission =
@@ -73,6 +92,7 @@ export const ProfileSetupScreen: React.FC<Props> = ({ navigation }) => {
       return;
     }
 
+    setIsSaving(true);
     try {
       await Promise.all([
         updateProfile({ name: businessName.trim() }),
@@ -81,6 +101,9 @@ export const ProfileSetupScreen: React.FC<Props> = ({ navigation }) => {
           bio,
           location,
           category,
+          yearsOfExperience: yearsOfExperience
+            ? Number(yearsOfExperience)
+            : undefined,
         }),
       ]);
       Alert.alert('Profile saved', 'Your artisan profile has been updated.', [
@@ -88,6 +111,8 @@ export const ProfileSetupScreen: React.FC<Props> = ({ navigation }) => {
       ]);
     } catch {
       Alert.alert('Failed to save', 'Please try again.');
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -148,6 +173,14 @@ export const ProfileSetupScreen: React.FC<Props> = ({ navigation }) => {
         onChangeText={setLocation}
       />
 
+      <Input
+        label="Years of Experience"
+        placeholder="e.g. 5"
+        value={yearsOfExperience}
+        onChangeText={setYearsOfExperience}
+        keyboardType="numeric"
+      />
+
       <Text className="mb-1.5 text-sm font-medium text-gray-700">Category</Text>
       <View className="mb-6 flex-row flex-wrap gap-2">
         {CATEGORIES.map((cat) => {
@@ -174,7 +207,7 @@ export const ProfileSetupScreen: React.FC<Props> = ({ navigation }) => {
         })}
       </View>
 
-      <Button label="Save Profile" onPress={handleSave} isLoading={isLoading} fullWidth size="lg" />
+      <Button label="Save Profile" onPress={handleSave} isLoading={isSaving} fullWidth size="lg" />
 
       <Modal
         visible={!!pendingImage}

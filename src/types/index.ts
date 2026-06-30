@@ -21,10 +21,12 @@ export interface ArtisanProfile {
   reviewCount: number;
   priceFrom: number;
   location: string;
+  yearsOfExperience?: number;
   avatarUrl?: string;
   profileImageUrl?: string;
   services: Service[];
   isVerified: boolean;
+  isAvailable?: boolean;
 }
 
 export interface Service {

@@ -29,7 +29,7 @@ export const FeaturedArtisans: React.FC<FeaturedArtisansProps> = ({
           className="overflow-visible"
         >
           {Array.from({ length: 3 }).map((_, i) => (
-            <View key={i} className="mr-3 w-44">
+            <View key={i} className="mr-3 w-60">
               <ArtisanCardSkeleton />
             </View>
           ))}
