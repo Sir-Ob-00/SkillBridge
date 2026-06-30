@@ -24,10 +24,14 @@ const config: ExpoConfig = {
     },
     package: 'com.skillbridge.mobile',
   },
-  plugins: ['expo-secure-store', 'expo-location'],
+  plugins: ['expo-secure-store', 'expo-location', 'expo-system-ui'],
   extra: {
     apiBaseUrl: process.env.API_BASE_URL,
     socketUrl: process.env.SOCKET_URL,
+
+    eas: {
+      projectId: 'd070deda-b1e0-4935-8dfb-d01ddc84a317',
+    },
   },
 };
 
