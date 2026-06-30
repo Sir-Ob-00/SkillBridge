@@ -69,13 +69,9 @@ export const ProfileSetupScreen: React.FC<Props> = ({ navigation }) => {
 
   const handleUploadImage = async () => {
     if (!pendingImage) return;
-    console.log('[ProfileSetupScreen] Starting profile image upload', {
-      pendingImage,
-    });
     setUploading(true);
     try {
       const profile = await artisanService.uploadProfileImage(pendingImage);
-      console.log('[ProfileSetupScreen] Profile image upload success', profile);
       setProfileImageUrl(profile.profileImageUrl ?? null);
       setPendingImage(null);
     } catch (err) {

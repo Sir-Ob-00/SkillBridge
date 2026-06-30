@@ -26,11 +26,9 @@ export const ProfilePortfolio: React.FC<ProfilePortfolioProps> = ({
       console.warn('[ProfilePortfolio] No artisanId provided');
       return;
     }
-    console.log('[ProfilePortfolio] Loading portfolio for', { artisanId });
     artisanService
       .getPortfolio(artisanId)
       .then((result) => {
-        console.log('[ProfilePortfolio] Portfolio loaded', { count: result.length });
         setItems(result);
       })
       .catch((err) => {
@@ -65,10 +63,6 @@ export const ProfilePortfolio: React.FC<ProfilePortfolioProps> = ({
 
   const handleUpload = async () => {
     if (!pendingImage || !title.trim()) return;
-    console.log('[ProfilePortfolio] Uploading portfolio item', {
-      artisanId,
-      title: title.trim(),
-    });
     setUploading(true);
     try {
       const newItem = await artisanService.addPortfolioItem(
@@ -77,7 +71,6 @@ export const ProfilePortfolio: React.FC<ProfilePortfolioProps> = ({
         title.trim(),
         description.trim() || undefined
       );
-      console.log('[ProfilePortfolio] Portfolio item uploaded', newItem);
       setItems((prev) => [newItem, ...prev]);
       setPendingImage(null);
       setTitle('');

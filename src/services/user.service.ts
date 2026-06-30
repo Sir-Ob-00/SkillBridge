@@ -19,26 +19,17 @@ export const userService = {
   },
 
   uploadAvatar: async (uri: string) => {
-    console.log('[userService] uploadAvatar called', { uri });
     const formData = new FormData();
     formData.append('avatar', {
       uri,
       type: 'image/jpeg',
       name: 'upload.jpg',
     } as any);
-    console.log('[userService] FormData prepared', {
-      uri,
-      field: 'avatar',
-      type: 'image/jpeg',
-      name: 'upload.jpg',
-      route: API_ROUTES.USERS.AVATAR,
-    });
     const { data } = await apiClient.post<ApiResponse<User>>(
       API_ROUTES.USERS.AVATAR,
       formData,
       { headers: { 'Content-Type': 'multipart/form-data' } }
     );
-    console.log('[userService] uploadAvatar success', data);
     return data.data;
   },
 };

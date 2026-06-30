@@ -28,12 +28,10 @@ export const ProfileServicesSection: React.FC<ProfileServicesSectionProps> = ({
       console.warn('[ProfileServicesSection] No artisanId provided');
       return;
     }
-    console.log('[ProfileServicesSection] Loading services for', { artisanId });
     setIsLoading(true);
     artisanApi
       .getServices(artisanId)
       .then((result) => {
-        console.log('[ProfileServicesSection] Services loaded', { count: result.length, result });
         setServices(result);
       })
       .catch((err) => {

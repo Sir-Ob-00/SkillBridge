@@ -37,7 +37,6 @@ export const ArtisanProfileScreen: React.FC<Props> = ({ navigation }) => {
     artisanService
       .getMyProfile()
       .then((profile) => {
-        console.log('[ArtisanProfileScreen] Loaded artisan profile', profile);
         setArtisanProfile(profile);
       })
       .catch((err) => {
@@ -72,13 +71,9 @@ export const ArtisanProfileScreen: React.FC<Props> = ({ navigation }) => {
 
   const handleUploadAvatar = async () => {
     if (!pendingAvatar) return;
-    console.log('[ArtisanProfileScreen] Starting profile image upload', {
-      pendingAvatar,
-    });
     setUploading(true);
     try {
       const profile = await artisanService.uploadProfileImage(pendingAvatar);
-      console.log('[ArtisanProfileScreen] Profile image upload success', profile);
       await updateProfile({ avatarUrl: profile.profileImageUrl });
       setPendingAvatar(null);
     } catch (err) {
