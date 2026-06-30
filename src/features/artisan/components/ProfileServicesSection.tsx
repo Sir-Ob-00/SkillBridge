@@ -22,12 +22,22 @@ export const ProfileServicesSection: React.FC<ProfileServicesSectionProps> = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const loadServices = useCallback(() => {
-    if (!artisanId) return;
+    if (!artisanId) {
+      console.warn('[ProfileServicesSection] No artisanId provided');
+      return;
+    }
+    console.log('[ProfileServicesSection] Loading services for', { artisanId });
     setIsLoading(true);
     artisanApi
       .getServices(artisanId)
-      .then(setServices)
-      .catch(() => setServices([]))
+      .then((result) => {
+        console.log('[ProfileServicesSection] Services loaded', { count: result.length, result });
+        setServices(result);
+      })
+      .catch((err) => {
+        console.error('[ProfileServicesSection] Failed to load services', err);
+        setServices([]);
+      })
       .finally(() => setIsLoading(false));
   }, [artisanId]);
 
@@ -36,18 +46,21 @@ export const ProfileServicesSection: React.FC<ProfileServicesSectionProps> = ({
   }, [loadServices]);
 
   const handleCreate = async (values: ServiceFormValues) => {
+    console.log('[ProfileServicesSection] Creating service', { artisanId, values });
     setIsSubmitting(true);
     try {
-      await artisanApi.createService(artisanId, {
+      const created = await artisanApi.createService(artisanId, {
         title: values.title,
         description: values.description,
         price: Number(values.price),
         durationMinutes: Number(values.durationMinutes),
         category: values.category,
       });
+      console.log('[ProfileServicesSection] Service created', created);
       setIsModalVisible(false);
       loadServices();
-    } catch {
+    } catch (err) {
+      console.error('[ProfileServicesSection] Failed to create service', err);
       Alert.alert('Failed to create service', 'Please try again.');
     } finally {
       setIsSubmitting(false);

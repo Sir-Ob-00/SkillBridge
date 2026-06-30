@@ -19,17 +19,26 @@ export const artisanService = {
   },
 
   uploadProfileImage: async (uri: string) => {
+    console.log('[artisanService] uploadProfileImage called', { uri });
     const formData = new FormData();
     formData.append('image', {
       uri,
       type: 'image/jpeg',
       name: 'upload.jpg',
     } as any);
+    console.log('[artisanService] FormData prepared', {
+      uri,
+      field: 'image',
+      type: 'image/jpeg',
+      name: 'upload.jpg',
+      route: API_ROUTES.ARTISANS.ME_PROFILE_IMAGE,
+    });
     const { data } = await apiClient.post<ApiResponse<ArtisanProfile>>(
       API_ROUTES.ARTISANS.ME_PROFILE_IMAGE,
       formData,
       { headers: { 'Content-Type': 'multipart/form-data' } }
     );
+    console.log('[artisanService] uploadProfileImage success', data);
     return data.data;
   },
 
@@ -41,10 +50,12 @@ export const artisanService = {
   },
 
   addPortfolioItem: async (
+    artisanId: string,
     imageUri: string,
     title: string,
     description?: string
   ) => {
+    console.log('[artisanService] addPortfolioItem called', { artisanId, imageUri, title });
     const formData = new FormData();
     formData.append('image', {
       uri: imageUri,
@@ -60,6 +71,7 @@ export const artisanService = {
       formData,
       { headers: { 'Content-Type': 'multipart/form-data' } }
     );
+    console.log('[artisanService] addPortfolioItem success', data);
     return data.data;
   },
 

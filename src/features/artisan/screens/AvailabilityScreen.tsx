@@ -8,27 +8,42 @@ import { Button } from '@shared/components';
 import { Loader } from '@shared/components/Loader';
 import { CalendarPicker } from '../components/CalendarPicker';
 import { artisanApi, AvailabilitySlot } from '@services/api/artisan.api';
+import { artisanService } from '@services/artisan.service';
 import { useAuthStore } from '@store/auth.store';
 import { colors } from '@shared/ui/colors';
 
 type Props = NativeStackScreenProps<ArtisanStackParamList, 'Availability'>;
 
 export const AvailabilityScreen: React.FC<Props> = ({ navigation }) => {
-  const artisanId = useAuthStore((state) => state.user?.id ?? '');
+  const userId = useAuthStore((state) => state.user?.id ?? '');
   const [slots, setSlots] = useState<AvailabilitySlot[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [holidayMode, setHolidayMode] = useState(false);
   const [instantAvailable, setInstantAvailable] = useState(false);
+  const [artisanId, setArtisanId] = useState<string>('');
 
   useEffect(() => {
-    if (!artisanId) return;
-    artisanApi
-      .getAvailability(artisanId)
-      .then(setSlots)
-      .catch(() => setSlots([]))
-      .finally(() => setIsLoading(false));
-  }, [artisanId]);
+    const load = async () => {
+      try {
+        const profile = await artisanService.getMyProfile();
+        setArtisanId(profile.id);
+        const availability = await artisanApi.getAvailability(profile.id);
+        setSlots(availability);
+      } catch {
+        setArtisanId(userId);
+        try {
+          const availability = await artisanApi.getAvailability(userId);
+          setSlots(availability);
+        } catch {
+          setSlots([]);
+        }
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    void load();
+  }, [userId]);
 
   const handleSave = async () => {
     setIsSaving(true);

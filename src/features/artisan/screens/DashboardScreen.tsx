@@ -5,6 +5,7 @@ import { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { ArtisanTabParamList, ArtisanStackParamList } from '../artisan.types';
 import { ScreenWrapper } from '@shared/layout';
+import { Avatar } from '@shared/components';
 import { useAuthStore } from '@store/auth.store';
 import { useBookingStore } from '@store/booking.store';
 import { chatApi } from '@features/chat/services/chat.api';
@@ -20,8 +21,8 @@ type Props = CompositeScreenProps<
 >;
 
 export const DashboardScreen: React.FC<Props> = ({ navigation }) => {
-  const userName = useAuthStore((state) => state.user?.name?.split(' ')[0]);
-  const initial = userName?.charAt(0) ?? 'A';
+  const user = useAuthStore((state) => state.user);
+  const userName = user?.name?.split(' ')[0];
   const { bookings, fetchBookings } = useBookingStore();
   const [earnings, setEarnings] = useState<{ total: number; thisMonth: number; pending: number } | null>(null);
   const [chats, setChats] = useState<Chat[]>([]);
@@ -43,9 +44,7 @@ export const DashboardScreen: React.FC<Props> = ({ navigation }) => {
             {userName ?? 'Artisan'} 👋
           </Text>
         </View>
-        <View className="h-12 w-12 items-center justify-center rounded-full bg-primary/10">
-          <Text className="text-lg font-bold text-primary">{initial}</Text>
-        </View>
+        <Avatar name={user?.name ?? 'Artisan'} imageUrl={user?.avatarUrl} />
       </View>
 
       <DashboardUrgentActions

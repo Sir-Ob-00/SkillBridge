@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Alert, Image, ScrollView, Text, View } from 'react-native';
 import { CompositeScreenProps } from '@react-navigation/native';
 import { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
@@ -12,7 +12,8 @@ import { useAuth } from '@hooks/useAuth';
 import { useAuthStore } from '@store/auth.store';
 import { useUserStore } from '@store/user.store';
 import { colors } from '@shared/ui/colors';
-import { userService } from '@services/user.service';
+import { ArtisanProfile } from '@app-types/index';
+import { artisanService } from '@services/artisan.service';
 import { ProfileBusinessCard } from '../components/ProfileBusinessCard';
 import { ProfileServicesSection } from '../components/ProfileServicesSection';
 import { ProfilePortfolio } from '../components/ProfilePortfolio';
@@ -26,10 +27,25 @@ type Props = CompositeScreenProps<
 
 export const ArtisanProfileScreen: React.FC<Props> = ({ navigation }) => {
   const { user, logout } = useAuth();
-  const artisanId = useAuthStore((state) => state.user?.id ?? '');
+  const userId = useAuthStore((state) => state.user?.id ?? '');
   const updateProfile = useUserStore((state) => state.updateProfile);
   const [pendingAvatar, setPendingAvatar] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [artisanProfile, setArtisanProfile] = useState<ArtisanProfile | null>(null);
+
+  useEffect(() => {
+    artisanService
+      .getMyProfile()
+      .then((profile) => {
+        console.log('[ArtisanProfileScreen] Loaded artisan profile', profile);
+        setArtisanProfile(profile);
+      })
+      .catch((err) => {
+        console.error('[ArtisanProfileScreen] Failed to load artisan profile', err);
+      });
+  }, []);
+
+  const artisanId = artisanProfile?.id ?? userId;
 
   const handlePickImage = async () => {
     const permission =
@@ -56,12 +72,17 @@ export const ArtisanProfileScreen: React.FC<Props> = ({ navigation }) => {
 
   const handleUploadAvatar = async () => {
     if (!pendingAvatar) return;
+    console.log('[ArtisanProfileScreen] Starting profile image upload', {
+      pendingAvatar,
+    });
     setUploading(true);
     try {
-      const updatedUser = await userService.uploadAvatar(pendingAvatar);
-      await updateProfile({ avatarUrl: updatedUser.avatarUrl });
+      const profile = await artisanService.uploadProfileImage(pendingAvatar);
+      console.log('[ArtisanProfileScreen] Profile image upload success', profile);
+      await updateProfile({ avatarUrl: profile.profileImageUrl });
       setPendingAvatar(null);
-    } catch {
+    } catch (err) {
+      console.error('[ArtisanProfileScreen] Profile image upload failed', err);
       Alert.alert('Failed', 'Could not upload profile photo. Please try again.');
     } finally {
       setUploading(false);
@@ -98,6 +119,7 @@ export const ArtisanProfileScreen: React.FC<Props> = ({ navigation }) => {
       >
         <ProfileBusinessCard
           user={user}
+          artisanProfile={artisanProfile}
           onEdit={() => navigation.navigate('ProfileSetup')}
           onPickImage={handlePickImage}
         />
@@ -109,6 +131,7 @@ export const ArtisanProfileScreen: React.FC<Props> = ({ navigation }) => {
         <ProfileRatingsSection artisanId={artisanId} />
 
         <ProfileAvailabilityCard
+          artisanId={artisanId}
           onPress={() => navigation.navigate('Availability')}
         />
 

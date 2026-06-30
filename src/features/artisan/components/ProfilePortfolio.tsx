@@ -22,10 +22,20 @@ export const ProfilePortfolio: React.FC<ProfilePortfolioProps> = ({
   const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
+    if (!artisanId) {
+      console.warn('[ProfilePortfolio] No artisanId provided');
+      return;
+    }
+    console.log('[ProfilePortfolio] Loading portfolio for', { artisanId });
     artisanService
       .getPortfolio(artisanId)
-      .then(setItems)
-      .catch(() => {})
+      .then((result) => {
+        console.log('[ProfilePortfolio] Portfolio loaded', { count: result.length });
+        setItems(result);
+      })
+      .catch((err) => {
+        console.error('[ProfilePortfolio] Failed to load portfolio', err);
+      })
       .finally(() => setLoading(false));
   }, [artisanId]);
 
@@ -55,18 +65,25 @@ export const ProfilePortfolio: React.FC<ProfilePortfolioProps> = ({
 
   const handleUpload = async () => {
     if (!pendingImage || !title.trim()) return;
+    console.log('[ProfilePortfolio] Uploading portfolio item', {
+      artisanId,
+      title: title.trim(),
+    });
     setUploading(true);
     try {
       const newItem = await artisanService.addPortfolioItem(
+        artisanId,
         pendingImage,
         title.trim(),
         description.trim() || undefined
       );
+      console.log('[ProfilePortfolio] Portfolio item uploaded', newItem);
       setItems((prev) => [newItem, ...prev]);
       setPendingImage(null);
       setTitle('');
       setDescription('');
-    } catch {
+    } catch (err) {
+      console.error('[ProfilePortfolio] Portfolio upload failed', err);
       Alert.alert('Failed', 'Could not upload portfolio image.');
     } finally {
       setUploading(false);
@@ -121,30 +138,43 @@ export const ProfilePortfolio: React.FC<ProfilePortfolioProps> = ({
           </Pressable>
         </View>
       ) : (
-        <View>
-          <View className="mb-3 flex-row flex-wrap gap-3">
-            {items.map((item) => (
-              <View key={item.id} className="relative w-[calc(33.33%-8px)]">
+        <View className="gap-4">
+          {items.map((item) => (
+            <View
+              key={item.id}
+              className="overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm shadow-gray-200"
+            >
+              <View className="relative">
                 <Image
                   source={{ uri: item.imageUrl }}
-                  className="h-28 w-full rounded-xl bg-gray-100"
+                  className="h-48 w-full bg-gray-100"
                   resizeMode="cover"
                 />
                 <Pressable
                   onPress={() => handleRemove(item.id)}
-                  className="absolute right-1.5 top-1.5 h-7 w-7 items-center justify-center rounded-full bg-black/50 active:opacity-70"
+                  className="absolute right-2 top-2 h-8 w-8 items-center justify-center rounded-full bg-black/50 active:opacity-70"
                 >
-                  <Trash2 size={14} color="#ffffff" />
+                  <Trash2 size={15} color="#ffffff" />
                 </Pressable>
               </View>
-            ))}
-            <Pressable
-              onPress={handleAdd}
-              className="h-28 w-[calc(33.33%-8px)] items-center justify-center rounded-xl border border-dashed border-gray-300 bg-gray-50 active:opacity-70"
-            >
-              <Plus size={24} color={colors.gray400} />
-            </Pressable>
-          </View>
+              <View className="p-3">
+                <Text className="text-base font-bold text-gray-900" numberOfLines={1}>
+                  {item.title}
+                </Text>
+                {item.description ? (
+                  <Text className="mt-0.5 text-sm leading-5 text-gray-500" numberOfLines={2}>
+                    {item.description}
+                  </Text>
+                ) : null}
+              </View>
+            </View>
+          ))}
+          <Pressable
+            onPress={handleAdd}
+            className="h-20 items-center justify-center rounded-2xl border border-dashed border-gray-300 bg-gray-50 active:opacity-70"
+          >
+            <Plus size={24} color={colors.gray400} />
+          </Pressable>
         </View>
       )}
 

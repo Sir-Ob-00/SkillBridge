@@ -2,20 +2,27 @@ import React from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { Briefcase, MapPin, Clock, DollarSign, Edit3, Camera } from 'lucide-react-native';
 import { Avatar, Button } from '@shared/components';
-import { User } from '@app-types/index';
+import { User, ArtisanProfile } from '@app-types/index';
+import { CATEGORIES } from '@constants/categories';
 import { colors } from '@shared/ui/colors';
 
 interface ProfileBusinessCardProps {
   user: User | null;
+  artisanProfile?: ArtisanProfile | null;
   onEdit: () => void;
   onPickImage: () => void;
 }
 
 export const ProfileBusinessCard: React.FC<ProfileBusinessCardProps> = ({
   user,
+  artisanProfile,
   onEdit,
   onPickImage,
 }) => {
+  const categoryLabel = CATEGORIES.find(
+    (c) => c.id === artisanProfile?.category
+  )?.label;
+
   return (
     <View className="mb-6">
       <View className="items-center">
@@ -38,6 +45,10 @@ export const ProfileBusinessCard: React.FC<ProfileBusinessCardProps> = ({
       </View>
 
       <View className="mt-4 rounded-2xl border border-gray-100 bg-white p-4 shadow-sm shadow-gray-200">
+        {artisanProfile?.bio ? (
+          <Text className="mb-3 text-sm text-gray-600">{artisanProfile.bio}</Text>
+        ) : null}
+
         <View className="mb-3 flex-row items-center">
           <View className="mr-3 h-10 w-10 items-center justify-center rounded-xl bg-primary/10">
             <Briefcase size={20} color={colors.primary} />
@@ -45,7 +56,7 @@ export const ProfileBusinessCard: React.FC<ProfileBusinessCardProps> = ({
           <View className="flex-1">
             <Text className="text-xs text-gray-500">Primary Skill</Text>
             <Text className="text-sm font-semibold text-gray-900">
-              Artisan
+              {categoryLabel ?? 'Artisan'}
             </Text>
           </View>
         </View>
@@ -57,7 +68,7 @@ export const ProfileBusinessCard: React.FC<ProfileBusinessCardProps> = ({
           <View className="flex-1">
             <Text className="text-xs text-gray-500">Location</Text>
             <Text className="text-sm font-semibold text-gray-900">
-              Service area not set
+              {artisanProfile?.location || 'Service area not set'}
             </Text>
           </View>
         </View>
@@ -81,7 +92,9 @@ export const ProfileBusinessCard: React.FC<ProfileBusinessCardProps> = ({
           <View className="flex-1">
             <Text className="text-xs text-gray-500">Service Pricing</Text>
             <Text className="text-sm font-semibold text-gray-900">
-              Set in services
+              {artisanProfile?.priceFrom
+                ? `From GHS ${artisanProfile.priceFrom}`
+                : 'Set in services'}
             </Text>
           </View>
         </View>
