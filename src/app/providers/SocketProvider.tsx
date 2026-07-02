@@ -1,6 +1,8 @@
 import React, { useEffect } from 'react';
 import { socketClient } from '@services/socket/socketClient';
 import { useAuthStore, selectIsAuthenticated } from '@store/auth.store';
+import { useBookingSocket } from '@features/booking/hooks/useBookingSocket';
+import { setupNotificationSocketListeners } from '@modules/notifications/notifications.socket';
 
 interface SocketProviderProps {
   children: React.ReactNode;
@@ -13,6 +15,8 @@ interface SocketProviderProps {
  */
 export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
   const isAuthenticated = useAuthStore(selectIsAuthenticated);
+
+  useBookingSocket();
 
   useEffect(() => {
     socketClient.onAuthErrorHandler(async () => {
@@ -30,9 +34,16 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
       socketClient.disconnect();
     }
 
+    const socket = socketClient.getSocket();
+    let cleanupNotifications: (() => void) | null = null;
+    if (socket) {
+      cleanupNotifications = setupNotificationSocketListeners(socket);
+    }
+
     return () => {
       socketClient.onAuthErrorHandler(async () => {});
       socketClient.disconnect();
+      if (cleanupNotifications) cleanupNotifications();
     };
   }, [isAuthenticated]);
 

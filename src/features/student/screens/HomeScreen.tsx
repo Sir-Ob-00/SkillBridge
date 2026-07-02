@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { FlatList, Text, View } from 'react-native';
 import { CompositeScreenProps } from '@react-navigation/native';
 import { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
@@ -18,6 +18,7 @@ import { ArtisanProfile } from '@app-types/index';
 import { useAuthStore } from '@store/auth.store';
 import { useFavorites } from '../hooks/useFavorites';
 import { Search as SearchIcon } from 'lucide-react-native';
+import { NotificationBell } from '@modules/notifications/components/NotificationBell';
 
 type Props = CompositeScreenProps<
   BottomTabScreenProps<StudentTabParamList, 'Home'>,
@@ -32,12 +33,9 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
-  const loadArtisans = useCallback(async (category: string | null) => {
+  const loadArtisans = useCallback(async () => {
     try {
-      const result = await artisanApi.list({
-        category: category ?? undefined,
-        page: 1,
-      });
+      const result = await artisanApi.list({ page: 1 });
       setArtisans(result.items);
     } catch {
       setArtisans([]);
@@ -46,12 +44,17 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
 
   useEffect(() => {
     setIsLoading(true);
-    void loadArtisans(selectedCategory).finally(() => setIsLoading(false));
-  }, [selectedCategory, loadArtisans]);
+    void loadArtisans().finally(() => setIsLoading(false));
+  }, [loadArtisans]);
+
+  const filteredArtisans = useMemo(() => {
+    if (!selectedCategory) return artisans;
+    return artisans.filter((a) => a.category === selectedCategory);
+  }, [artisans, selectedCategory]);
 
   const handleRefresh = async () => {
     setIsRefreshing(true);
-    await loadArtisans(selectedCategory);
+    await loadArtisans();
     setIsRefreshing(false);
   };
 
@@ -65,7 +68,10 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
 
   const headerContent = (
     <View className="pt-2">
-      <HomeGreeting name={userName} />
+      <View className="flex-row items-center justify-between">
+        <HomeGreeting name={userName} />
+        <NotificationBell onPress={() => navigation.navigate('Notifications')} />
+      </View>
       <SearchCard onPress={navigateToSearch} />
 
       <Text className="mb-3 font-heading text-lg font-bold text-gray-900">
@@ -78,7 +84,7 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
 
       <View className="mt-6">
         <FeaturedArtisans
-          artisans={artisans}
+          artisans={filteredArtisans}
           isLoading={isLoading}
           onPress={navigateToArtisanProfile}
         />
@@ -101,15 +107,19 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
   ) : (
     <EmptyState
       icon={SearchIcon}
-      title="No artisans available"
-      description="We're onboarding skilled professionals. Check back soon."
+      title={selectedCategory ? 'No artisans in this category' : 'No artisans available'}
+      description={
+        selectedCategory
+          ? 'Try selecting a different category.'
+          : "We're onboarding skilled professionals. Check back soon."
+      }
     />
   );
 
   return (
     <ScreenWrapper scrollable={false} contentClassName="pt-2">
       <FlatList
-        data={isLoading ? [] : artisans}
+        data={isLoading ? [] : filteredArtisans}
         keyExtractor={(item) => item.id}
         ListHeaderComponent={headerContent}
         ListEmptyComponent={emptyContent}

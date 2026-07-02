@@ -43,6 +43,7 @@ export type BookingStatus =
   | 'pending'
   | 'accepted'
   | 'rejected'
+  | 'in_progress'
   | 'completed'
   | 'cancelled';
 
@@ -50,11 +51,16 @@ export interface Booking {
   id: string;
   studentId: string;
   artisanId: string;
-  serviceId: string;
+  serviceId?: string;
+  serviceTitle?: string;
+  price?: number;
   status: BookingStatus;
   scheduledAt: string;
   createdAt: string;
   notes?: string;
+  student?: { id: string; name: string; avatarUrl?: string };
+  artisan?: { id: string; businessName: string; avatarUrl?: string };
+  service?: { id: string; title: string; price: number; durationMinutes?: number };
 }
 
 export interface Review {

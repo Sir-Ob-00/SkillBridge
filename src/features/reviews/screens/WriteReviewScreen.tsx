@@ -1,35 +1,39 @@
 import React, { useState } from 'react';
 import { Alert, Pressable, Text, View } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { ArrowLeft, Star } from 'lucide-react-native';
+import { ArrowLeft } from 'lucide-react-native';
 import { StudentStackParamList } from '@features/student/student.types';
 import { ScreenWrapper } from '@shared/layout';
 import { Button, Input } from '@shared/components';
-import { reviewApi } from '@services/api/review.api';
+import { StarRating } from '../components/StarRating';
+import { useReviewsStore } from '../reviews.store';
+import { validateReview, getErrorMessage } from '../reviews.service';
 import { colors } from '@shared/ui/colors';
 
 type Props = NativeStackScreenProps<StudentStackParamList, 'WriteReview'>;
 
 export const WriteReviewScreen: React.FC<Props> = ({ route, navigation }) => {
   const { bookingId, artisanId } = route.params;
+  const createReview = useReviewsStore((state) => state.createReview);
   const [rating, setRating] = useState(5);
   const [comment, setComment] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   const handleSubmit = async () => {
-    if (comment.trim().length < 5) {
-      Alert.alert('Add more detail', 'Please write at least a short comment.');
-      return;
-    }
+    const errors = validateReview(rating, comment);
+    setFieldErrors(errors);
+    if (Object.keys(errors).length > 0) return;
 
     setIsSubmitting(true);
     try {
-      await reviewApi.create({ bookingId, artisanId, rating, comment: comment.trim() });
-      Alert.alert('Thank you!', 'Your review has been submitted.', [
+      await createReview(artisanId, { bookingId, rating, comment: comment.trim() });
+      Alert.alert('Review submitted!', 'Thank you for your feedback.', [
         { text: 'OK', onPress: () => navigation.goBack() },
       ]);
-    } catch {
-      Alert.alert('Submission failed', 'Please try again.');
+    } catch (err) {
+      const message = getErrorMessage(err);
+      Alert.alert('Could not submit review', message);
     } finally {
       setIsSubmitting(false);
     }
@@ -45,31 +49,41 @@ export const WriteReviewScreen: React.FC<Props> = ({ route, navigation }) => {
         Write a review
       </Text>
 
-      <View className="mb-6 flex-row justify-center gap-2">
-        {Array.from({ length: 5 }).map((_, index) => {
-          const value = index + 1;
-          return (
-            <Pressable key={value} onPress={() => setRating(value)}>
-              <Star
-                size={36}
-                color={colors.secondary}
-                fill={value <= rating ? colors.secondary : 'transparent'}
-              />
-            </Pressable>
-          );
-        })}
+      <Text className="mb-2 text-sm font-medium text-gray-700">Your rating</Text>
+      <View className="mb-6 flex-row justify-center">
+        <StarRating
+          rating={rating}
+          size={36}
+          interactive
+          onChange={setRating}
+        />
       </View>
+      {fieldErrors.rating ? (
+        <Text className="-mt-4 mb-4 text-center text-sm text-red-500">
+          {fieldErrors.rating}
+        </Text>
+      ) : null}
 
       <Input
         label="Your review"
         placeholder="Share details about your experience..."
         value={comment}
-        onChangeText={setComment}
+        onChangeText={(text) => {
+          setComment(text);
+          if (fieldErrors.comment) setFieldErrors({});
+        }}
         multiline
         numberOfLines={5}
         textAlignVertical="top"
         className="min-h-[120px]"
+        error={fieldErrors.comment}
       />
+
+      <View className="mt-2 mb-1">
+        <Text className="text-xs text-gray-400">
+          {comment.length}/1000 characters
+        </Text>
+      </View>
 
       <Button
         label="Submit Review"

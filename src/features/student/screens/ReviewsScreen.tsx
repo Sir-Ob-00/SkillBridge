@@ -1,30 +1,33 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect } from 'react';
 import { FlatList, Pressable, Text, View } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { ArrowLeft, Star } from 'lucide-react-native';
 import { StudentStackParamList } from '../student.types';
 import { ScreenWrapper } from '@shared/layout';
-import { Loader } from '@shared/components/Loader';
 import { EmptyState } from '@shared/components';
 import { ReviewCard } from '@features/reviews/components/ReviewCard';
-import { reviewApi } from '@services/api/review.api';
-import { Review } from '@app-types/index';
+import { useReviewsStore } from '@features/reviews/reviews.store';
 import { colors } from '@shared/ui/colors';
 
 type Props = NativeStackScreenProps<StudentStackParamList, 'Reviews'>;
 
 export const ReviewsScreen: React.FC<Props> = ({ route, navigation }) => {
   const { artisanId } = route.params;
-  const [reviews, setReviews] = useState<Review[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const { cache, isLoading, fetchReviews, loadMore } = useReviewsStore();
+  const cached = cache[artisanId];
+  const reviews = cached?.reviews ?? [];
+  const page = cached?.page ?? 1;
+  const totalPages = cached?.totalPages ?? 1;
 
   useEffect(() => {
-    reviewApi
-      .list(artisanId)
-      .then((result) => setReviews(result.items))
-      .catch(() => setReviews([]))
-      .finally(() => setIsLoading(false));
-  }, [artisanId]);
+    void fetchReviews(artisanId);
+  }, [artisanId, fetchReviews]);
+
+  const handleEndReached = useCallback(() => {
+    if (page < totalPages && !isLoading[artisanId]) {
+      void loadMore(artisanId);
+    }
+  }, [artisanId, page, totalPages, isLoading, loadMore]);
 
   return (
     <ScreenWrapper scrollable={false} edges={['top', 'left', 'right']}>
@@ -36,9 +39,7 @@ export const ReviewsScreen: React.FC<Props> = ({ route, navigation }) => {
         Reviews
       </Text>
 
-      {isLoading ? (
-        <Loader label="Loading reviews..." />
-      ) : reviews.length === 0 ? (
+      {!isLoading[artisanId] && reviews.length === 0 ? (
         <EmptyState
           icon={Star}
           title="No reviews yet"
@@ -50,6 +51,17 @@ export const ReviewsScreen: React.FC<Props> = ({ route, navigation }) => {
           keyExtractor={(item) => item.id}
           showsVerticalScrollIndicator={false}
           contentContainerStyle={{ paddingBottom: 24 }}
+          refreshing={isLoading[artisanId] ?? false}
+          onRefresh={() => fetchReviews(artisanId)}
+          onEndReached={handleEndReached}
+          onEndReachedThreshold={0.5}
+          ListFooterComponent={
+            isLoading[artisanId] && reviews.length > 0 ? (
+              <View className="py-4">
+                <Text className="text-center text-sm text-gray-400">Loading more...</Text>
+              </View>
+            ) : null
+          }
           renderItem={({ item }) => <ReviewCard review={item} />}
         />
       )}

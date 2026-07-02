@@ -25,6 +25,7 @@ export const LoginScreen: React.FC<Props> = ({ navigation, route }) => {
   const getErrorFeedback = (err: unknown) => {
     const apiError = err as { statusCode?: number; message?: string };
     const statusCode = apiError.statusCode ?? 500;
+    const apiMessage = apiError.message;
 
     if (statusCode === 0) {
       return {
@@ -40,8 +41,7 @@ export const LoginScreen: React.FC<Props> = ({ navigation, route }) => {
       return {
         type: 'error' as const,
         title: 'Something Went Wrong',
-        message:
-          "We're experiencing a temporary issue. Please try again in a few moments.",
+        message: apiMessage || "We're experiencing a temporary issue. Please try again in a few moments.",
         buttonLabel: 'OK',
       };
     }
@@ -49,8 +49,7 @@ export const LoginScreen: React.FC<Props> = ({ navigation, route }) => {
     return {
       type: 'error' as const,
       title: 'Unable to Sign In',
-      message:
-        'The email address or password you entered is incorrect. Please check your credentials and try again.',
+      message: apiMessage || 'The email address or password you entered is incorrect. Please check your credentials and try again.',
       buttonLabel: 'Try Again',
     };
   };

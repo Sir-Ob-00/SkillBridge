@@ -20,6 +20,8 @@ import { artisanApi } from '@services/api/artisan.api';
 import { ArtisanProfile, PortfolioItem, Service } from '@app-types/index';
 import { formatCurrency } from '@utils/currency';
 import { colors } from '@shared/ui/colors';
+import { useReviewsStore } from '@features/reviews/reviews.store';
+import { ReviewCard } from '@features/reviews/components/ReviewCard';
 
 type Props = NativeStackScreenProps<StudentStackParamList, 'ArtisanProfile'>;
 
@@ -33,6 +35,9 @@ export const ArtisanProfileScreen: React.FC<Props> = ({ route, navigation }) => 
   const { artisanId } = route.params;
   const { bottom: bottomInset } = useSafeAreaInsets();
   const { isFavorite, toggleFavorite } = useFavorites();
+  const { cache, fetchReviews } = useReviewsStore();
+  const reviewsCache = cache[artisanId];
+  const reviews = reviewsCache?.reviews ?? [];
 
   const [artisan, setArtisan] = useState<ArtisanProfile | null>(null);
   const [portfolio, setPortfolio] = useState<PortfolioItem[]>([]);
@@ -69,6 +74,7 @@ export const ArtisanProfileScreen: React.FC<Props> = ({ route, navigation }) => 
       setArtisan({ ...profileData, services: servicesData });
       setPortfolio(portfolioData);
       setAvailability(availabilityData);
+      void fetchReviews(artisanId);
     } catch (err) {
       console.error('[ArtisanProfileScreen] Unexpected error in loadData', err);
       setArtisan(null);
@@ -76,7 +82,7 @@ export const ArtisanProfileScreen: React.FC<Props> = ({ route, navigation }) => 
     } finally {
       setIsLoading(false);
     }
-  }, [artisanId]);
+  }, [artisanId, fetchReviews]);
 
   useEffect(() => {
     loadData();
@@ -181,9 +187,10 @@ export const ArtisanProfileScreen: React.FC<Props> = ({ route, navigation }) => 
             <Text className="text-sm text-gray-500">No services listed yet.</Text>
           ) : (
             artisan.services.map((service) => (
-              <View
+              <Pressable
                 key={service.id}
-                className="mb-3 rounded-2xl border border-gray-100 bg-white p-4"
+                onPress={() => handleBookService(service)}
+                className="mb-3 rounded-2xl border border-gray-100 bg-white p-4 active:opacity-80"
               >
                 <Text className="text-base font-semibold text-gray-900">
                   {service.title}
@@ -191,12 +198,13 @@ export const ArtisanProfileScreen: React.FC<Props> = ({ route, navigation }) => 
                 <Text className="mt-1 text-sm text-gray-500" numberOfLines={2}>
                   {service.description}
                 </Text>
-                <View className="mt-2">
+                <View className="mt-2 flex-row items-center justify-between">
                   <Text className="text-sm font-semibold text-primary">
                     {formatCurrency(service.price)} · {service.durationMinutes} min
                   </Text>
+                  <Text className="text-xs font-medium text-primary">Book Now →</Text>
                 </View>
-              </View>
+              </Pressable>
             ))
           )}
         </View>
@@ -248,34 +256,60 @@ export const ArtisanProfileScreen: React.FC<Props> = ({ route, navigation }) => 
                 navigation.navigate('Reviews', { artisanId: artisan.id })
               }
             >
-              <Text className="text-sm font-medium text-primary">See all</Text>
+              <Text className="text-sm font-medium text-primary">
+                {reviews.length > 0 ? 'See all' : 'View all'}
+              </Text>
             </Pressable>
           </View>
-          <View className="flex-row items-center gap-3 rounded-2xl border border-gray-100 bg-white p-4">
-            <View className="items-center">
-              <Text className="text-3xl font-bold text-gray-900">
-                {artisan?.rating?.toFixed?.(1) ?? '0.0'}
-              </Text>
-              <Text className="text-xs text-gray-500">
-                {artisan.reviewCount ?? 0} review{artisan.reviewCount !== 1 ? 's' : ''}
-              </Text>
+
+          {reviews.length === 0 ? (
+            <View className="items-center rounded-2xl border border-dashed border-gray-200 bg-gray-50/50 p-6">
+              <Star size={28} color={colors.gray400} />
+              <Text className="mt-2 text-sm text-gray-500">No reviews yet</Text>
             </View>
-            <View className="flex-1">
-              <View className="flex-row">
-                {Array.from({ length: 5 }).map((_, i) => (
-                  <Star
-                    key={i}
-                    size={16}
-                    color={colors.secondary}
-                    fill={i < Math.round(artisan.rating ?? 0) ? colors.secondary : 'transparent'}
-                  />
-                ))}
+          ) : (
+            <>
+              <View className="mb-4 flex-row items-center gap-3 rounded-2xl border border-gray-100 bg-white p-4">
+                <View className="items-center">
+                  <Text className="font-heading text-3xl font-bold text-gray-900">
+                    {reviewsCache
+                      ? (reviews.reduce((s, r) => s + r.rating, 0) / reviews.length).toFixed(1)
+                      : artisan?.rating?.toFixed?.(1) ?? '0.0'}
+                  </Text>
+                  <Text className="text-xs text-gray-500">
+                    {reviews.length} review{reviews.length !== 1 ? 's' : ''}
+                  </Text>
+                </View>
+                <View className="flex-1">
+                  <View className="flex-row">
+                    {Array.from({ length: 5 }).map((_, i) => (
+                      <Star
+                        key={i}
+                        size={16}
+                        color={colors.secondary}
+                        fill={
+                          i < Math.round(
+                            reviewsCache
+                              ? reviews.reduce((s, r) => s + r.rating, 0) / reviews.length
+                              : (artisan.rating ?? 0)
+                          )
+                            ? colors.secondary
+                            : 'transparent'
+                        }
+                      />
+                    ))}
+                  </View>
+                  <Text className="mt-1 text-xs text-gray-500">
+                    Based on {reviews.length} review{reviews.length !== 1 ? 's' : ''}
+                  </Text>
+                </View>
               </View>
-              <Text className="mt-1 text-xs text-gray-500">
-                Rated {artisan?.rating?.toFixed?.(1) ?? '0.0'} out of 5
-              </Text>
-            </View>
-          </View>
+
+              {reviews.slice(0, 3).map((review) => (
+                <ReviewCard key={review.id} review={review} />
+              ))}
+            </>
+          )}
         </View>
 
         <View className="mb-4">
@@ -316,13 +350,13 @@ export const ArtisanProfileScreen: React.FC<Props> = ({ route, navigation }) => 
         <View className="flex-row gap-3">
           <Button
             label="Book Now"
-            onPress={() => {
-              if (artisan.services?.length) {
-                handleBookService(artisan.services[0]);
-              }
-            }}
+            onPress={() =>
+              navigation.navigate('Booking', {
+                artisanId: artisan.id,
+                serviceId: artisan.services?.length ? artisan.services[0].id : undefined,
+              })
+            }
             className="flex-1"
-            disabled={!artisan.services?.length}
           />
           <Button
             label="Chat"

@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { FlatList, Pressable, Text, View } from 'react-native';
+import React, { useCallback, useEffect, useState } from 'react';
+import { Alert, FlatList, Pressable, Text, View } from 'react-native';
 import { CompositeScreenProps } from '@react-navigation/native';
 import { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
@@ -7,9 +7,10 @@ import { Inbox } from 'lucide-react-native';
 import { ArtisanTabParamList, ArtisanStackParamList } from '../artisan.types';
 import { ScreenWrapper } from '@shared/layout';
 import { RequestCard } from '../components/RequestCard';
-import { EmptyState } from '@shared/components';
+import { EmptyState, Button } from '@shared/components';
 import { useBookingStore } from '@store/booking.store';
 import { BookingStatus } from '@app-types/index';
+import { useIsFocused } from '@react-navigation/native';
 
 type Props = CompositeScreenProps<
   BottomTabScreenProps<ArtisanTabParamList, 'Requests'>,
@@ -20,16 +21,95 @@ const FILTERS: { label: string; value: BookingStatus | 'all' }[] = [
   { label: 'All', value: 'all' },
   { label: 'Pending', value: 'pending' },
   { label: 'Accepted', value: 'accepted' },
+  { label: 'In Progress', value: 'in_progress' },
   { label: 'Completed', value: 'completed' },
 ];
 
 export const RequestsScreen: React.FC<Props> = ({ navigation }) => {
-  const { bookings, isLoading, fetchBookings } = useBookingStore();
+  const {
+    bookings, isLoading, isLoadingMore, page, totalPages,
+    fetchBookings, loadMore, updateStatus,
+  } = useBookingStore();
   const [filter, setFilter] = useState<BookingStatus | 'all'>('pending');
+  const isFocused = useIsFocused();
 
   useEffect(() => {
     void fetchBookings(filter === 'all' ? {} : { status: filter });
+  }, [filter, fetchBookings, isFocused]);
+
+  const handleRefresh = useCallback(() => {
+    void fetchBookings(filter === 'all' ? {} : { status: filter });
   }, [filter, fetchBookings]);
+
+  const handleEndReached = useCallback(() => {
+    if (page < totalPages && !isLoadingMore) {
+      void loadMore();
+    }
+  }, [page, totalPages, isLoadingMore, loadMore]);
+
+  const handleQuickAction = useCallback(async (id: string, status: BookingStatus, label: string) => {
+    if (status === 'cancelled' || status === 'completed' || status === 'rejected') {
+      Alert.alert(
+        `${label} Booking`,
+        `Are you sure you want to ${label.toLowerCase()} this booking?`,
+        [
+          { text: 'Cancel', style: 'cancel' },
+          { text: label, onPress: () => updateStatus(id, status) },
+        ]
+      );
+    } else {
+      try {
+        await updateStatus(id, status);
+      } catch {
+        Alert.alert('Failed', 'Could not update booking status.');
+      }
+    }
+  }, [updateStatus]);
+
+  const renderActions = (bookingId: string, status: BookingStatus) => {
+    switch (status) {
+      case 'pending':
+        return (
+          <View className="flex-row gap-2 mt-2">
+            <Button
+              label="Decline"
+              variant="outline"
+              size="sm"
+              onPress={() => handleQuickAction(bookingId, 'rejected', 'Decline')}
+              className="flex-1"
+            />
+            <Button
+              label="Accept"
+              size="sm"
+              onPress={() => handleQuickAction(bookingId, 'accepted', 'Accept')}
+              className="flex-1"
+            />
+          </View>
+        );
+      case 'accepted':
+        return (
+          <View className="mt-2">
+            <Button
+              label="Start Job"
+              size="sm"
+              onPress={() => handleQuickAction(bookingId, 'in_progress', 'Start')}
+            />
+          </View>
+        );
+      case 'in_progress':
+        return (
+          <View className="mt-2">
+            <Button
+              label="Complete Job"
+              size="sm"
+              onPress={() => handleQuickAction(bookingId, 'completed', 'Complete')}
+            />
+          </View>
+        );
+      default:
+        return null;
+    }
+  };
 
   return (
     <ScreenWrapper scrollable={false} contentClassName="pt-2">
@@ -75,14 +155,25 @@ export const RequestsScreen: React.FC<Props> = ({ navigation }) => {
           showsVerticalScrollIndicator={false}
           contentContainerStyle={{ paddingBottom: 24 }}
           refreshing={isLoading}
-          onRefresh={() => fetchBookings(filter === 'all' ? {} : { status: filter })}
+          onRefresh={handleRefresh}
+          onEndReached={handleEndReached}
+          onEndReachedThreshold={0.5}
+          ListFooterComponent={
+            isLoadingMore ? (
+              <View className="py-4">
+                <Text className="text-center text-sm text-gray-400">Loading more...</Text>
+              </View>
+            ) : null
+          }
           renderItem={({ item }) => (
-            <RequestCard
-              booking={item}
+            <Pressable
               onPress={() =>
                 navigation.navigate('BookingDetails', { bookingId: item.id })
               }
-            />
+            >
+              <RequestCard booking={item} onPress={() => {}} />
+              {renderActions(item.id, item.status)}
+            </Pressable>
           )}
         />
       )}

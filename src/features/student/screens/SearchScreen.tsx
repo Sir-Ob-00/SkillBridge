@@ -41,10 +41,15 @@ export const SearchScreen: React.FC<Props> = ({ navigation }) => {
     artisanApi
       .list({
         query: debouncedQuery.trim() || undefined,
-        category: selectedCategory ?? undefined,
         page: 1,
       })
-      .then((result) => setResults(result.items))
+      .then((result) => {
+        let filtered = result.items;
+        if (selectedCategory) {
+          filtered = filtered.filter((a) => a.category === selectedCategory);
+        }
+        setResults(filtered);
+      })
       .catch(() => setResults([]))
       .finally(() => setIsLoading(false));
   }, [debouncedQuery, selectedCategory]);

@@ -9,7 +9,7 @@ export type StudentTabParamList = {
 export type StudentStackParamList = {
   StudentTabs: undefined;
   ArtisanProfile: { artisanId: string };
-  Booking: { artisanId: string; serviceId: string };
+  Booking: { artisanId: string; serviceId?: string };
   BookingDetails: { bookingId: string };
   BookingStatus: { bookingId: string };
   Reviews: { artisanId: string };

@@ -17,6 +17,7 @@ const STEP_ORDER: BookingStatus[] = ['pending', 'accepted', 'completed'];
 const STEP_LABELS: Record<BookingStatus, string> = {
   pending: 'Requested',
   accepted: 'Accepted by artisan',
+  in_progress: 'In progress',
   completed: 'Service completed',
   rejected: 'Rejected',
   cancelled: 'Cancelled',

@@ -33,6 +33,9 @@
       ],
       "@config/*": [
         "src/config/*"
+      ],
+      "@modules/*": [
+        "src/modules/*"
       ]
     }
   },

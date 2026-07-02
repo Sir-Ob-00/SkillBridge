@@ -11,6 +11,11 @@ export const SOCKET_EVENTS = {
   LEAVE_CHAT: 'leave_chat',
 
   MESSAGE_READ: 'message_read',
+
+  BOOKING_CREATED: 'booking_created',
+  BOOKING_ACCEPTED: 'booking_accepted',
+  BOOKING_COMPLETED: 'booking_completed',
+  BOOKING_CANCELLED: 'booking_cancelled',
 } as const;
 
 export type SocketEvent = (typeof SOCKET_EVENTS)[keyof typeof SOCKET_EVENTS];

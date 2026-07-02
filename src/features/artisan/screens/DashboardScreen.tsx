@@ -14,6 +14,7 @@ import { Chat } from '@app-types/index';
 import { DashboardUrgentActions } from '../components/DashboardUrgentActions';
 import { DashboardQuickStats } from '../components/DashboardQuickStats';
 import { DashboardTodaysJobs } from '../components/DashboardTodaysJobs';
+import { NotificationBell } from '@modules/notifications/components/NotificationBell';
 
 type Props = CompositeScreenProps<
   BottomTabScreenProps<ArtisanTabParamList, 'Dashboard'>,
@@ -41,10 +42,13 @@ export const DashboardScreen: React.FC<Props> = ({ navigation }) => {
             Dashboard
           </Text>
           <Text className="mt-0.5 font-heading text-3xl font-bold text-gray-900">
-            {userName ?? 'Artisan'} 👋
+            {userName ?? 'Artisan'}
           </Text>
         </View>
-        <Avatar name={user?.name ?? 'Artisan'} imageUrl={user?.avatarUrl} />
+        <View className="flex-row items-center gap-2">
+          <NotificationBell onPress={() => navigation.navigate('Notifications')} />
+          <Avatar name={user?.name ?? 'Artisan'} imageUrl={user?.avatarUrl} />
+        </View>
       </View>
 
       <DashboardUrgentActions

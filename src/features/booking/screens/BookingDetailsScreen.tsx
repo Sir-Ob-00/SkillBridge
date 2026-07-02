@@ -1,28 +1,51 @@
-import React, { useEffect } from 'react';
-import { Pressable, Text, View } from 'react-native';
+import React from 'react';
+import { Alert, Pressable, Text, View } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { ArrowLeft, Calendar, FileText } from 'lucide-react-native';
+import { ArrowLeft, Calendar, DollarSign, FileText, User } from 'lucide-react-native';
 import { ScreenWrapper } from '@shared/layout';
 import { Button } from '@shared/components';
 import { Loader } from '@shared/components/Loader';
 import { StatusBadge } from '../components/StatusBadge';
 import { useBookingStore } from '@store/booking.store';
+import { formatCurrency } from '@utils/currency';
 import { formatDateTime } from '@utils/formatDate';
 import { colors } from '@shared/ui/colors';
 import { useRole } from '@hooks/useRole';
+import { useCallback } from 'react';
+import { BookingStatus } from '@app-types/index';
+import { useReviewsStore } from '@features/reviews/reviews.store';
 
-type BookingDetailsRoute = { BookingDetails: { bookingId: string }; WriteReview?: { bookingId: string; artisanId: string } };
-type Props = NativeStackScreenProps<BookingDetailsRoute, 'BookingDetails'>;
+type Props = NativeStackScreenProps<{ BookingDetails: { bookingId: string } }, 'BookingDetails'>;
 
 export const BookingDetailsScreen: React.FC<Props> = ({ route, navigation }) => {
   const { bookingId } = route.params;
   const role = useRole();
-  const { selectedBooking, isLoading, fetchBookingById, updateStatus } =
-    useBookingStore();
+  const { selectedBooking, isLoading, fetchBookingById, updateStatus } = useBookingStore();
+  const { isReviewed, markReviewed } = useReviewsStore();
 
-  useEffect(() => {
+  React.useEffect(() => {
     void fetchBookingById(bookingId);
   }, [bookingId, fetchBookingById]);
+
+  const handleStatusUpdate = useCallback(async (status: BookingStatus) => {
+    try {
+      await updateStatus(bookingId, status);
+      Alert.alert('Updated', `Booking ${status.replace('_', ' ')} successfully.`);
+    } catch {
+      Alert.alert('Failed', 'Could not update booking status.');
+    }
+  }, [bookingId, updateStatus]);
+
+  const confirmAction = (status: BookingStatus, label: string) => {
+    Alert.alert(
+      `${label} Booking`,
+      `Are you sure you want to ${label.toLowerCase()} this booking?`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { text: label, onPress: () => handleStatusUpdate(status) },
+      ]
+    );
+  };
 
   if (isLoading || !selectedBooking) {
     return <Loader fullScreen label="Loading booking..." />;
@@ -30,6 +53,11 @@ export const BookingDetailsScreen: React.FC<Props> = ({ route, navigation }) => 
 
   const booking = selectedBooking;
   const isArtisan = role === 'artisan';
+  const serviceName =
+    booking.service?.title ?? booking.serviceTitle ?? `Booking #${booking.id.slice(-6).toUpperCase()}`;
+  const displayPrice = booking.service?.price ?? booking.price ?? 0;
+  const customerName = booking.student?.name ?? `Student #${booking.studentId.slice(-4).toUpperCase()}`;
+  const artisanName = booking.artisan?.businessName ?? `Artisan #${booking.artisanId.slice(-4).toUpperCase()}`;
 
   return (
     <ScreenWrapper scrollable edges={['top', 'left', 'right']}>
@@ -38,78 +66,125 @@ export const BookingDetailsScreen: React.FC<Props> = ({ route, navigation }) => 
       </Pressable>
 
       <View className="flex-row items-center justify-between">
-        <Text className="font-heading text-2xl font-bold text-gray-900">
-          Booking #{booking.id.slice(-6).toUpperCase()}
+        <Text className="flex-1 font-heading text-2xl font-bold text-gray-900" numberOfLines={1}>
+          {serviceName}
         </Text>
         <StatusBadge status={booking.status} />
       </View>
 
       <View className="mt-6 rounded-2xl border border-gray-200 bg-white p-4">
         <View className="flex-row items-center">
+          <User size={18} color={colors.gray400} />
+          <Text className="ml-2 text-sm text-gray-500">
+            {isArtisan ? `Customer: ${customerName}` : `Artisan: ${artisanName}`}
+          </Text>
+        </View>
+
+        <View className="mt-3 flex-row items-center">
           <Calendar size={18} color={colors.gray400} />
           <Text className="ml-2 text-base text-gray-900">
             {formatDateTime(booking.scheduledAt)}
           </Text>
         </View>
 
+        {displayPrice > 0 ? (
+          <View className="mt-3 flex-row items-center">
+            <DollarSign size={18} color={colors.gray400} />
+            <Text className="ml-2 text-base font-semibold text-gray-900">
+              {formatCurrency(displayPrice)}
+            </Text>
+          </View>
+        ) : null}
+
         {booking.notes ? (
           <View className="mt-3 flex-row items-start">
-            <FileText size={18} color={colors.gray400} className="mt-0.5" />
+            <FileText size={18} color={colors.gray400} />
             <Text className="ml-2 flex-1 text-sm text-gray-600">{booking.notes}</Text>
           </View>
         ) : null}
       </View>
 
+      {/* Artisan actions */}
       {isArtisan && booking.status === 'pending' ? (
         <View className="mt-6 flex-row gap-3">
           <Button
             label="Decline"
             variant="outline"
-            onPress={() => void updateStatus(booking.id, 'rejected')}
+            onPress={() => confirmAction('rejected', 'Decline')}
             className="flex-1"
           />
           <Button
             label="Accept"
-            onPress={() => void updateStatus(booking.id, 'accepted')}
+            onPress={() => handleStatusUpdate('accepted')}
             className="flex-1"
           />
         </View>
       ) : null}
 
       {isArtisan && booking.status === 'accepted' ? (
+        <View className="mt-6">
+          <Button
+            label="Start Job"
+            onPress={() => handleStatusUpdate('in_progress')}
+            fullWidth
+          />
+        </View>
+      ) : null}
+
+      {isArtisan && booking.status === 'in_progress' ? (
+        <View className="mt-6">
+          <Button
+            label="Complete Job"
+            onPress={() => confirmAction('completed', 'Complete')}
+            fullWidth
+          />
+        </View>
+      ) : null}
+
+      {isArtisan && booking.status === 'pending' ? (
         <Button
-          label="Mark as Completed"
-          onPress={() => void updateStatus(booking.id, 'completed')}
+          label="Cancel Booking"
+          variant="danger"
+          onPress={() => confirmAction('cancelled', 'Cancel')}
           fullWidth
-          className="mt-6"
+          className="mt-3"
         />
       ) : null}
 
+      {/* Student actions */}
       {!isArtisan && booking.status === 'pending' ? (
         <Button
           label="Cancel Booking"
           variant="danger"
-          onPress={() => void updateStatus(booking.id, 'cancelled')}
+          onPress={() => confirmAction('cancelled', 'Cancel')}
           fullWidth
           className="mt-6"
         />
       ) : null}
 
       {!isArtisan && booking.status === 'completed' ? (
-        <Button
-          label="Write a Review"
-          onPress={() =>
-            (navigation as unknown as NativeStackScreenProps<
-              { WriteReview: { bookingId: string; artisanId: string } },
-              'WriteReview'
-            >['navigation']).navigate('WriteReview', {
-              bookingId: booking.id,
-              artisanId: booking.artisanId,
-            })
-          }
-          fullWidth
-          className="mt-6"
-        />
+        isReviewed(booking.id) ? (
+          <Button
+            label="Review Submitted"
+            variant="ghost"
+            disabled
+            fullWidth
+            className="mt-6"
+          />
+        ) : (
+          <Button
+            label="Write a Review"
+            onPress={() => {
+              markReviewed(booking.id);
+              (navigation as any).navigate('WriteReview', {
+                bookingId: booking.id,
+                artisanId: booking.artisanId,
+              });
+            }}
+            fullWidth
+            className="mt-6"
+          />
+        )
       ) : null}
     </ScreenWrapper>
   );

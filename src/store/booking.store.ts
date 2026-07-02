@@ -10,14 +10,18 @@ interface BookingState {
   bookings: Booking[];
   selectedBooking: Booking | null;
   isLoading: boolean;
+  isLoadingMore: boolean;
   error: string | null;
   page: number;
   totalPages: number;
+  totalItems: number;
+  currentFilter: BookingListParams;
 
-  fetchBookings: (params?: BookingListParams) => Promise<void>;
+  fetchBookings: (params?: BookingListParams, append?: boolean) => Promise<void>;
   fetchBookingById: (id: string) => Promise<void>;
   createBooking: (payload: CreateBookingPayload) => Promise<Booking>;
   updateStatus: (id: string, status: BookingStatus) => Promise<void>;
+  loadMore: () => Promise<void>;
   reset: () => void;
 }
 
@@ -25,22 +29,28 @@ export const useBookingStore = create<BookingState>((set, get) => ({
   bookings: [],
   selectedBooking: null,
   isLoading: false,
+  isLoadingMore: false,
   error: null,
   page: 1,
   totalPages: 1,
+  totalItems: 0,
+  currentFilter: {},
 
-  fetchBookings: async (params = {}) => {
-    set({ isLoading: true, error: null });
+  fetchBookings: async (params = {}, append = false) => {
+    const merged = { ...get().currentFilter, ...params };
+    set({ isLoading: !append, isLoadingMore: append, error: null, currentFilter: merged });
     try {
-      const result = await bookingApi.list(params);
-      set({
-        bookings: result.items,
+      const result = await bookingApi.list(merged);
+      set((state) => ({
+        bookings: append ? [...state.bookings, ...result.items] : result.items,
         page: result.page,
         totalPages: result.totalPages,
+        totalItems: result.totalItems,
         isLoading: false,
-      });
-    } catch (err) {
-      set({ isLoading: false, error: 'Failed to load bookings.' });
+        isLoadingMore: false,
+      }));
+    } catch {
+      set({ isLoading: false, isLoadingMore: false, error: 'Failed to load bookings.' });
     }
   },
 
@@ -49,7 +59,7 @@ export const useBookingStore = create<BookingState>((set, get) => ({
     try {
       const booking = await bookingApi.getById(id);
       set({ selectedBooking: booking, isLoading: false });
-    } catch (err) {
+    } catch {
       set({ isLoading: false, error: 'Failed to load booking.' });
     }
   },
@@ -60,6 +70,7 @@ export const useBookingStore = create<BookingState>((set, get) => ({
       const booking = await bookingApi.create(payload);
       set((state) => ({
         bookings: [booking, ...state.bookings],
+        totalItems: state.totalItems + 1,
         isLoading: false,
       }));
       return booking;
@@ -77,12 +88,29 @@ export const useBookingStore = create<BookingState>((set, get) => ({
         selectedBooking:
           get().selectedBooking?.id === id ? updated : get().selectedBooking,
       }));
-    } catch (err) {
+    } catch {
       set({ error: 'Failed to update booking status.' });
-      throw err;
+      throw new Error('Failed to update booking status.');
     }
   },
 
+  loadMore: async () => {
+    const { page, totalPages, isLoading, isLoadingMore } = get();
+    if (isLoading || isLoadingMore || page >= totalPages) return;
+    const nextPage = page + 1;
+    await get().fetchBookings({ ...get().currentFilter, page: nextPage }, true);
+  },
+
   reset: () =>
-    set({ bookings: [], selectedBooking: null, error: null, page: 1, totalPages: 1 }),
+    set({
+      bookings: [],
+      selectedBooking: null,
+      error: null,
+      page: 1,
+      totalPages: 1,
+      totalItems: 0,
+      isLoading: false,
+      isLoadingMore: false,
+      currentFilter: {},
+    }),
 }));

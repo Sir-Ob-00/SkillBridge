@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { FlatList, Pressable, Text, View } from 'react-native';
 import { CompositeScreenProps } from '@react-navigation/native';
 import { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
@@ -10,6 +10,7 @@ import { EmptyState } from '@shared/components';
 import { BookingCard } from '../components/BookingCard';
 import { useBookingStore } from '@store/booking.store';
 import { BookingStatus } from '@app-types/index';
+import { useIsFocused } from '@react-navigation/native';
 
 type Props = CompositeScreenProps<
   BottomTabScreenProps<StudentTabParamList, 'Bookings'>,
@@ -24,12 +25,26 @@ const FILTERS: { label: string; value: BookingStatus | 'all' }[] = [
 ];
 
 export const BookingHistoryScreen: React.FC<Props> = ({ navigation }) => {
-  const { bookings, isLoading, fetchBookings } = useBookingStore();
+  const {
+    bookings, isLoading, isLoadingMore, totalPages, page,
+    fetchBookings, loadMore,
+  } = useBookingStore();
   const [filter, setFilter] = useState<BookingStatus | 'all'>('all');
+  const isFocused = useIsFocused();
 
   useEffect(() => {
     void fetchBookings(filter === 'all' ? {} : { status: filter });
+  }, [filter, fetchBookings, isFocused]);
+
+  const handleRefresh = useCallback(() => {
+    void fetchBookings(filter === 'all' ? {} : { status: filter });
   }, [filter, fetchBookings]);
+
+  const handleEndReached = useCallback(() => {
+    if (page < totalPages && !isLoadingMore) {
+      void loadMore();
+    }
+  }, [page, totalPages, isLoadingMore, loadMore]);
 
   return (
     <ScreenWrapper scrollable={false} contentClassName="pt-2">
@@ -75,7 +90,16 @@ export const BookingHistoryScreen: React.FC<Props> = ({ navigation }) => {
           showsVerticalScrollIndicator={false}
           contentContainerStyle={{ paddingBottom: 24 }}
           refreshing={isLoading}
-          onRefresh={() => fetchBookings(filter === 'all' ? {} : { status: filter })}
+          onRefresh={handleRefresh}
+          onEndReached={handleEndReached}
+          onEndReachedThreshold={0.5}
+          ListFooterComponent={
+            isLoadingMore ? (
+              <View className="py-4">
+                <Text className="text-center text-sm text-gray-400">Loading more...</Text>
+              </View>
+            ) : null
+          }
           renderItem={({ item }) => (
             <BookingCard
               booking={item}

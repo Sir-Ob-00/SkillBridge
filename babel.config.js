@@ -21,6 +21,7 @@ module.exports = function(api) {
             "@constants": "./src/constants",
             "@app-types": "./src/types",
             "@config": "./src/config",
+            "@modules": "./src/modules",
           },
         },
       ],
