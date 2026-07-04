@@ -8,6 +8,8 @@ import { colors } from '@shared/ui/colors';
 interface DashboardQuickStatsProps {
   bookings: Booking[];
   earningsThisMonth: number;
+  averageRating: number;
+  reviewCount: number;
 }
 
 const StatCard: React.FC<{
@@ -28,6 +30,8 @@ const StatCard: React.FC<{
 export const DashboardQuickStats: React.FC<DashboardQuickStatsProps> = ({
   bookings,
   earningsThisMonth,
+  averageRating,
+  reviewCount,
 }) => {
   return (
     <View className="mb-6">
@@ -46,8 +50,8 @@ export const DashboardQuickStats: React.FC<DashboardQuickStatsProps> = ({
         <View className="w-[calc(50%-6px)]">
           <StatCard
             icon={<Star size={18} color={colors.secondary} />}
-            label="Rating"
-            value="4.7 ★"
+            label={`Rating (${reviewCount})`}
+            value={reviewCount > 0 ? `${averageRating.toFixed(1)} ★` : '—'}
             bg="bg-secondary/20"
           />
         </View>

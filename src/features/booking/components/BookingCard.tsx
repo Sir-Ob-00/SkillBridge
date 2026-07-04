@@ -41,7 +41,7 @@ export const BookingCard: React.FC<BookingCardProps> = ({ booking, onPress, show
       <View className="mt-2 flex-row items-center">
         <Calendar size={14} color={colors.gray400} />
         <Text className="ml-1.5 flex-1 text-sm text-gray-600">
-          {formatDateTime(booking.scheduledAt)}
+          {formatDateTime(booking.scheduledTime)}
         </Text>
         {displayPrice > 0 ? (
           <View className="flex-row items-center">

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Alert, Platform, Pressable, ScrollView, Text, View } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import DateTimePicker from '@react-native-community/datetimepicker';
-import { ArrowLeft, Calendar, Clock, DollarSign } from 'lucide-react-native';
+import { ArrowLeft, Calendar, Clock } from 'lucide-react-native';
 import { StudentStackParamList } from '../student.types';
 import { ScreenWrapper } from '@shared/layout';
 import { Button, Input } from '@shared/components';
@@ -24,10 +24,7 @@ export const BookingScreen: React.FC<Props> = ({ route, navigation }) => {
   const [services, setServices] = useState<Service[]>([]);
   const [isLoadingServices, setIsLoadingServices] = useState(true);
   const [selectedService, setSelectedService] = useState<Service | null>(null);
-  const [useCustomService, setUseCustomService] = useState(false);
-  const [customTitle, setCustomTitle] = useState('');
-  const [customPrice, setCustomPrice] = useState('');
-  const [scheduledAt, setScheduledAt] = useState<Date>(
+  const [scheduledTime, setScheduledTime] = useState<Date>(
     new Date(Date.now() + 24 * 60 * 60 * 1000)
   );
   const [showPicker, setShowPicker] = useState<'date' | 'time' | null>(null);
@@ -50,35 +47,29 @@ export const BookingScreen: React.FC<Props> = ({ route, navigation }) => {
 
   const handleDateChange = (_: any, selected?: Date) => {
     setShowPicker(null);
-    if (selected) setScheduledAt(selected);
+    if (selected) setScheduledTime(selected);
   };
 
   const handleConfirm = async () => {
-    if (!useCustomService && !selectedService) {
-      Alert.alert('Select a service', 'Please choose a service or enter a custom one.');
-      return;
-    }
-    if (useCustomService && customTitle.trim().length < 2) {
-      Alert.alert('Enter service name', 'Please describe the service you need.');
+    if (!selectedService) {
+      Alert.alert('Select a service', 'Please choose a service to book.');
       return;
     }
 
     try {
       await createBooking({
         artisanId,
-        ...(useCustomService
-          ? { serviceTitle: customTitle.trim(), price: Number(customPrice) || undefined }
-          : { serviceId: selectedService!.id }
-        ),
-        scheduledAt: scheduledAt.toISOString(),
+        serviceId: selectedService!.id,
+        scheduledTime: scheduledTime.toISOString(),
         notes: notes.trim() || undefined,
       });
 
       Alert.alert('Booking requested', 'The artisan will confirm shortly.', [
         { text: 'OK', onPress: () => navigation.popToTop() },
       ]);
-    } catch {
-      Alert.alert('Booking failed', 'Please try again.');
+    } catch (err) {
+      const message = (err as { message?: string })?.message || 'Please try again.';
+      Alert.alert('Booking failed', message);
     }
   };
 
@@ -97,86 +88,37 @@ export const BookingScreen: React.FC<Props> = ({ route, navigation }) => {
       </Text>
 
       <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
-        <View className="mt-4">
-          <Text className="mb-2 text-sm font-medium text-gray-700">Select a service</Text>
-          <Pressable
-            onPress={() => { setUseCustomService(false); setSelectedService(null); }}
-            className={[
-              'mb-2 rounded-2xl border p-4',
-              !useCustomService && !selectedService
-                ? 'border-primary bg-primary/5'
-                : 'border-gray-200 bg-white',
-            ].join(' ')}
-          >
-            <Text className="text-sm font-medium text-gray-700">Choose from available services</Text>
-          </Pressable>
+        <Text className="mb-2 text-sm font-medium text-gray-700">Select a service</Text>
 
-          {!useCustomService ? (
-            services.length === 0 ? (
-              <Text className="text-sm text-gray-500">No services listed. Switch to custom service below.</Text>
-            ) : (
-              services.map((svc) => {
-                const isSelected = selectedService?.id === svc.id;
-                return (
-                  <Pressable
-                    key={svc.id}
-                    onPress={() => setSelectedService(svc)}
-                    className={[
-                      'mb-2 rounded-2xl border p-4',
-                      isSelected ? 'border-primary bg-primary/5' : 'border-gray-200 bg-white',
-                    ].join(' ')}
-                  >
-                    <Text className={['text-base font-semibold', isSelected ? 'text-primary' : 'text-gray-900'].join(' ')}>
-                      {svc.title}
-                    </Text>
-                    <Text className="mt-0.5 text-sm text-gray-500" numberOfLines={1}>
-                      {svc.description}
-                    </Text>
-                    <Text className="mt-1 text-sm font-medium text-primary">
-                      {formatCurrency(svc.price)} · {svc.durationMinutes} min
-                    </Text>
-                  </Pressable>
-                );
-              })
-            )
-          ) : null}
+        {services.length === 0 ? (
+          <Text className="text-sm text-gray-500">This artisan has no services listed.</Text>
+        ) : (
+          services.map((svc) => {
+            const isSelected = selectedService?.id === svc.id;
+            return (
+              <Pressable
+                key={svc.id}
+                onPress={() => setSelectedService(svc)}
+                className={[
+                  'mb-2 rounded-2xl border p-4',
+                  isSelected ? 'border-primary bg-primary/5' : 'border-gray-200 bg-white',
+                ].join(' ')}
+              >
+                <Text className={['text-base font-semibold', isSelected ? 'text-primary' : 'text-gray-900'].join(' ')}>
+                  {svc.title}
+                </Text>
+                <Text className="mt-0.5 text-sm text-gray-500" numberOfLines={1}>
+                  {svc.description}
+                </Text>
+                <Text className="mt-1 text-sm font-medium text-primary">
+                  {formatCurrency(svc.price)} · {svc.durationMinutes} min
+                </Text>
+              </Pressable>
+            );
+          })
+        )}
 
-          <Pressable
-            onPress={() => { setUseCustomService(true); setSelectedService(null); }}
-            className={[
-              'mb-4 rounded-2xl border p-4',
-              useCustomService ? 'border-primary bg-primary/5' : 'border-gray-200 bg-white',
-            ].join(' ')}
-          >
-            <Text className={[
-              'text-sm font-medium',
-              useCustomService ? 'text-primary' : 'text-gray-700',
-            ].join(' ')}>
-              I need a custom service
-            </Text>
-          </Pressable>
-
-          {useCustomService ? (
-            <View className="mb-4">
-              <Input
-                label="Service name"
-                placeholder="e.g. Custom haircut"
-                value={customTitle}
-                onChangeText={setCustomTitle}
-              />
-              <Input
-                label="Price (optional)"
-                placeholder="e.g. 50"
-                value={customPrice}
-                onChangeText={setCustomPrice}
-                keyboardType="numeric"
-                leftIcon={<DollarSign size={16} color={colors.gray400} />}
-              />
-            </View>
-          ) : null}
-        </View>
-
-        <Text className="mb-2 text-sm font-medium text-gray-700">
+        <Text className="mb-2 mt-4 text-sm font-medium text-gray-700">
           Preferred date & time
         </Text>
         <Pressable
@@ -185,7 +127,7 @@ export const BookingScreen: React.FC<Props> = ({ route, navigation }) => {
         >
           <Calendar size={18} color={colors.gray400} />
           <Text className="ml-2 flex-1 text-base text-gray-900">
-            {formatDateTime(scheduledAt.toISOString())}
+            {formatDateTime(scheduledTime.toISOString())}
           </Text>
           <Pressable onPress={() => setShowPicker('time')} className="ml-2">
             <Clock size={18} color={colors.gray400} />
@@ -194,7 +136,7 @@ export const BookingScreen: React.FC<Props> = ({ route, navigation }) => {
 
         {showPicker ? (
           <DateTimePicker
-            value={scheduledAt}
+            value={scheduledTime}
             mode={showPicker}
             is24Hour
             minimumDate={new Date()}

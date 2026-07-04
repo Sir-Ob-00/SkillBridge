@@ -9,7 +9,6 @@ import { ArtisanTabParamList, ArtisanStackParamList } from '../artisan.types';
 import { ScreenWrapper } from '@shared/layout';
 import { Button, Modal } from '@shared/components';
 import { useAuth } from '@hooks/useAuth';
-import { useAuthStore } from '@store/auth.store';
 import { useUserStore } from '@store/user.store';
 import { colors } from '@shared/ui/colors';
 import { ArtisanProfile } from '@app-types/index';
@@ -27,7 +26,6 @@ type Props = CompositeScreenProps<
 
 export const ArtisanProfileScreen: React.FC<Props> = ({ navigation }) => {
   const { user, logout } = useAuth();
-  const userId = useAuthStore((state) => state.user?.id ?? '');
   const updateProfile = useUserStore((state) => state.updateProfile);
   const [pendingAvatar, setPendingAvatar] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
@@ -44,7 +42,7 @@ export const ArtisanProfileScreen: React.FC<Props> = ({ navigation }) => {
       });
   }, []);
 
-  const artisanId = artisanProfile?.id ?? userId;
+  const artisanId = artisanProfile?.id;
 
   const handlePickImage = async () => {
     const permission =
@@ -119,16 +117,17 @@ export const ArtisanProfileScreen: React.FC<Props> = ({ navigation }) => {
           onPickImage={handlePickImage}
         />
 
-        <ProfileServicesSection artisanId={artisanId} />
-
-        <ProfilePortfolio artisanId={artisanId} />
-
-        <ProfileRatingsSection artisanId={artisanId} />
-
-        <ProfileAvailabilityCard
-          artisanId={artisanId}
-          onPress={() => navigation.navigate('Availability')}
-        />
+        {artisanId && (
+          <>
+            <ProfileServicesSection artisanId={artisanId} />
+            <ProfilePortfolio artisanId={artisanId} />
+            <ProfileRatingsSection artisanId={artisanId} />
+            <ProfileAvailabilityCard
+              artisanId={artisanId}
+              onPress={() => navigation.navigate('Availability')}
+            />
+          </>
+        )}
 
         <Button
           label="Sign out"

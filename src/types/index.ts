@@ -55,7 +55,7 @@ export interface Booking {
   serviceTitle?: string;
   price?: number;
   status: BookingStatus;
-  scheduledAt: string;
+  scheduledTime: string;
   createdAt: string;
   notes?: string;
   student?: { id: string; name: string; avatarUrl?: string };

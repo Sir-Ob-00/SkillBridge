@@ -73,7 +73,7 @@ export const DashboardUrgentActions: React.FC<DashboardUrgentActionsProps> = ({
                     Student #{booking.studentId.slice(-4).toUpperCase()}
                   </Text>
                   <Text className="text-xs text-gray-500">
-                    {new Date(booking.scheduledAt).toLocaleDateString(undefined, {
+                    {new Date(booking.scheduledTime).toLocaleDateString(undefined, {
                       weekday: 'short',
                       month: 'short',
                       day: 'numeric',

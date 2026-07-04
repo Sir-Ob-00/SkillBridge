@@ -5,6 +5,7 @@ import {
   BookingListParams,
   CreateBookingPayload,
 } from '@services/api/booking.api';
+import { logger } from '@utils/logger';
 
 interface BookingState {
   bookings: Booking[];
@@ -37,7 +38,7 @@ export const useBookingStore = create<BookingState>((set, get) => ({
   currentFilter: {},
 
   fetchBookings: async (params = {}, append = false) => {
-    const merged = { ...get().currentFilter, ...params };
+    const merged = append ? { ...get().currentFilter, ...params } : params;
     set({ isLoading: !append, isLoadingMore: append, error: null, currentFilter: merged });
     try {
       const result = await bookingApi.list(merged);
@@ -49,7 +50,8 @@ export const useBookingStore = create<BookingState>((set, get) => ({
         isLoading: false,
         isLoadingMore: false,
       }));
-    } catch {
+    } catch (err) {
+      logger.error('fetchBookings failed', err);
       set({ isLoading: false, isLoadingMore: false, error: 'Failed to load bookings.' });
     }
   },
@@ -59,7 +61,8 @@ export const useBookingStore = create<BookingState>((set, get) => ({
     try {
       const booking = await bookingApi.getById(id);
       set({ selectedBooking: booking, isLoading: false });
-    } catch {
+    } catch (err) {
+      logger.error('fetchBookingById failed', err);
       set({ isLoading: false, error: 'Failed to load booking.' });
     }
   },
@@ -68,14 +71,12 @@ export const useBookingStore = create<BookingState>((set, get) => ({
     set({ isLoading: true, error: null });
     try {
       const booking = await bookingApi.create(payload);
-      set((state) => ({
-        bookings: [booking, ...state.bookings],
-        totalItems: state.totalItems + 1,
-        isLoading: false,
-      }));
+      await get().fetchBookings({}, false);
       return booking;
     } catch (err) {
-      set({ isLoading: false, error: 'Failed to create booking.' });
+      logger.error('createBooking failed', err);
+      const message = (err as { message?: string })?.message || 'Failed to create booking.';
+      set({ isLoading: false, error: message });
       throw err;
     }
   },
@@ -83,12 +84,10 @@ export const useBookingStore = create<BookingState>((set, get) => ({
   updateStatus: async (id, status) => {
     try {
       const updated = await bookingApi.updateStatus(id, status);
-      set((state) => ({
-        bookings: state.bookings.map((b) => (b.id === id ? updated : b)),
-        selectedBooking:
-          get().selectedBooking?.id === id ? updated : get().selectedBooking,
-      }));
-    } catch {
+      set({ selectedBooking: get().selectedBooking?.id === id ? updated : get().selectedBooking });
+      await get().fetchBookings({}, false);
+    } catch (err) {
+      logger.error('updateStatus failed', err);
       set({ error: 'Failed to update booking status.' });
       throw new Error('Failed to update booking status.');
     }

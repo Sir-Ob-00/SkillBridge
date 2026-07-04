@@ -83,7 +83,7 @@ export const BookingDetailsScreen: React.FC<Props> = ({ route, navigation }) => 
         <View className="mt-3 flex-row items-center">
           <Calendar size={18} color={colors.gray400} />
           <Text className="ml-2 text-base text-gray-900">
-            {formatDateTime(booking.scheduledAt)}
+            {formatDateTime(booking.scheduledTime)}
           </Text>
         </View>
 

@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
-import { Alert, Pressable, Text, View } from 'react-native';
+import { Alert, Pressable, Text, TextInput, View } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { ArrowLeft } from 'lucide-react-native';
 import { StudentStackParamList } from '@features/student/student.types';
 import { ScreenWrapper } from '@shared/layout';
-import { Button, Input } from '@shared/components';
+import { Button } from '@shared/components';
 import { StarRating } from '../components/StarRating';
 import { useReviewsStore } from '../reviews.store';
 import { validateReview, getErrorMessage } from '../reviews.service';
@@ -64,20 +64,25 @@ export const WriteReviewScreen: React.FC<Props> = ({ route, navigation }) => {
         </Text>
       ) : null}
 
-      <Input
-        label="Your review"
-        placeholder="Share details about your experience..."
-        value={comment}
-        onChangeText={(text) => {
-          setComment(text);
-          if (fieldErrors.comment) setFieldErrors({});
-        }}
-        multiline
-        numberOfLines={5}
-        textAlignVertical="top"
-        className="min-h-[120px]"
-        error={fieldErrors.comment}
-      />
+      <Text className="mb-1.5 text-sm font-medium text-gray-700">Your review</Text>
+      <View className="rounded-2xl border border-transparent bg-gray-50 px-4">
+        <TextInput
+          placeholder="Share details about your experience..."
+          placeholderTextColor={colors.gray400}
+          value={comment}
+          onChangeText={(text) => {
+            setComment(text);
+            if (fieldErrors.comment) setFieldErrors({});
+          }}
+          multiline
+          numberOfLines={5}
+          textAlignVertical="top"
+          className="py-3 text-base text-gray-900 min-h-[120px]"
+        />
+      </View>
+      {fieldErrors.comment ? (
+        <Text className="mt-1 text-xs text-red-500">{fieldErrors.comment}</Text>
+      ) : null}
 
       <View className="mt-2 mb-1">
         <Text className="text-xs text-gray-400">

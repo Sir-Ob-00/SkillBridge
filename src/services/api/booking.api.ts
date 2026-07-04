@@ -9,10 +9,8 @@ import {
 
 export interface CreateBookingPayload {
   artisanId: string;
-  serviceId?: string;
-  serviceTitle?: string;
-  price?: number;
-  scheduledAt: string;
+  serviceId: string;
+  scheduledTime: string;
   notes?: string;
 }
 

@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { Text, View } from 'react-native';
-import { CompositeScreenProps } from '@react-navigation/native';
+import { CompositeScreenProps, useIsFocused } from '@react-navigation/native';
 import { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { ArtisanTabParamList, ArtisanStackParamList } from '../artisan.types';
@@ -10,6 +10,8 @@ import { useAuthStore } from '@store/auth.store';
 import { useBookingStore } from '@store/booking.store';
 import { chatApi } from '@features/chat/services/chat.api';
 import { artisanApi } from '@services/api/artisan.api';
+import { reviewApi } from '@services/api/review.api';
+import { artisanService } from '@services/artisan.service';
 import { Chat } from '@app-types/index';
 import { DashboardUrgentActions } from '../components/DashboardUrgentActions';
 import { DashboardQuickStats } from '../components/DashboardQuickStats';
@@ -27,12 +29,31 @@ export const DashboardScreen: React.FC<Props> = ({ navigation }) => {
   const { bookings, fetchBookings } = useBookingStore();
   const [earnings, setEarnings] = useState<{ total: number; thisMonth: number; pending: number } | null>(null);
   const [chats, setChats] = useState<Chat[]>([]);
+  const [averageRating, setAverageRating] = useState(0);
+  const [reviewCount, setReviewCount] = useState(0);
+  const isFocused = useIsFocused();
 
-  useEffect(() => {
+  const loadDashboard = useCallback(() => {
     void fetchBookings({});
     artisanApi.getEarnings().then(setEarnings).catch(() => {});
     chatApi.listChats().then(setChats).catch(() => {});
+    artisanService.getMyProfile().then((profile) => {
+      if (profile) {
+        reviewApi.list(profile.id, 1, 999).then((result) => {
+          const allReviews = result.items;
+          setReviewCount(result.totalItems);
+          if (allReviews.length > 0) {
+            const avg = allReviews.reduce((sum, r) => sum + r.rating, 0) / allReviews.length;
+            setAverageRating(avg);
+          }
+        }).catch(() => {});
+      }
+    }).catch(() => {});
   }, [fetchBookings]);
+
+  useEffect(() => {
+    if (isFocused) loadDashboard();
+  }, [isFocused, loadDashboard]);
 
   return (
     <ScreenWrapper scrollable contentClassName="pt-2">
@@ -63,6 +84,8 @@ export const DashboardScreen: React.FC<Props> = ({ navigation }) => {
       <DashboardQuickStats
         bookings={bookings}
         earningsThisMonth={earnings?.thisMonth ?? 0}
+        averageRating={averageRating}
+        reviewCount={reviewCount}
       />
 
       <DashboardTodaysJobs

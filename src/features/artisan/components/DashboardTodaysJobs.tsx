@@ -31,7 +31,7 @@ export const DashboardTodaysJobs: React.FC<DashboardTodaysJobsProps> = ({
   onViewDetails,
 }) => {
   const { updateStatus } = useBookingStore();
-  const todaysJobs = bookings.filter((b) => isToday(b.scheduledAt));
+  const todaysJobs = bookings.filter((b) => isToday(b.scheduledTime));
 
   const handleAction = async (booking: Booking) => {
     if (booking.status === 'pending' || booking.status === 'accepted') {
@@ -100,7 +100,7 @@ export const DashboardTodaysJobs: React.FC<DashboardTodaysJobsProps> = ({
                   <View className="flex-row items-center">
                     <Clock size={14} color={colors.gray400} />
                     <Text className="ml-1.5 text-sm text-gray-600">
-                      {new Date(booking.scheduledAt).toLocaleTimeString(undefined, {
+                      {new Date(booking.scheduledTime).toLocaleTimeString(undefined, {
                         hour: '2-digit',
                         minute: '2-digit',
                       })}

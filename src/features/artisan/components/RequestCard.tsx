@@ -39,7 +39,7 @@ export const RequestCard: React.FC<RequestCardProps> = ({ booking, onPress }) =>
       <View className="mt-1.5 flex-row items-center">
         <Calendar size={14} color={colors.gray400} />
         <Text className="ml-1.5 flex-1 text-sm text-gray-600">
-          {formatDateTime(booking.scheduledAt)}
+          {formatDateTime(booking.scheduledTime)}
         </Text>
         {displayPrice > 0 ? (
           <View className="flex-row items-center">

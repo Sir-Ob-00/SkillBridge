@@ -5,12 +5,13 @@ export interface Category {
 }
 
 export const CATEGORIES: Category[] = [
-  { id: 'barber', label: 'Barbers', icon: 'scissors' },
-  { id: 'designer', label: 'Designers', icon: 'pen-tool' },
-  { id: 'tutor', label: 'Tutors', icon: 'book-open' },
-  { id: 'tailor', label: 'Tailors', icon: 'shirt' },
-  { id: 'photographer', label: 'Photographers', icon: 'camera' },
-  { id: 'caterer', label: 'Caterers', icon: 'utensils' },
-  { id: 'cleaner', label: 'Cleaning', icon: 'spray-can' },
-  { id: 'tech', label: 'Tech Repair', icon: 'smartphone' },
+  { id: 'graphic_design', label: 'Graphic Design', icon: 'pen-tool' },
+  { id: 'photography', label: 'Photography', icon: 'camera' },
+  { id: 'barbering', label: 'Barbering', icon: 'scissors' },
+  { id: 'makeup', label: 'Makeup', icon: 'palette' },
+  { id: 'tailoring', label: 'Tailoring', icon: 'shirt' },
+  { id: 'laptop_repair', label: 'Laptop Repair', icon: 'monitor' },
+  { id: 'phone_repair', label: 'Phone Repair', icon: 'smartphone' },
+  { id: 'tutoring', label: 'Tutoring', icon: 'book-open' },
+  { id: 'event_decoration', label: 'Event Decoration', icon: 'sparkles' },
 ];

@@ -3,12 +3,13 @@ import { Pressable, ScrollView, Text, View } from 'react-native';
 import {
   BookOpen,
   Camera,
+  Monitor,
+  Palette,
   PenTool,
   Scissors,
   Shirt,
   Smartphone,
-  SprayCan,
-  Utensils,
+  Sparkles,
 } from 'lucide-react-native';
 import { CATEGORIES } from '@constants/categories';
 import { colors } from '@shared/ui/colors';
@@ -16,12 +17,13 @@ import { colors } from '@shared/ui/colors';
 const iconMap: Record<string, React.FC<{ size: number; color: string }>> = {
   scissors: Scissors,
   'pen-tool': PenTool,
-  'book-open': BookOpen,
-  shirt: Shirt,
   camera: Camera,
-  utensils: Utensils,
-  'spray-can': SprayCan,
+  palette: Palette,
+  shirt: Shirt,
+  monitor: Monitor,
   smartphone: Smartphone,
+  'book-open': BookOpen,
+  sparkles: Sparkles,
 };
 
 interface CategoryFilterProps {
