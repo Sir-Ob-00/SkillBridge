@@ -98,6 +98,7 @@ export const SearchScreen: React.FC<Props> = ({ navigation }) => {
           keyExtractor={(item) => item.id}
           showsVerticalScrollIndicator={false}
           contentContainerStyle={{ paddingBottom: 24 }}
+          keyboardShouldPersistTaps="handled"
           renderItem={({ item }) => (
             <ArtisanCard
               artisan={item}

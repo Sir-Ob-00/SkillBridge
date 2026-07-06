@@ -13,7 +13,7 @@ export type StudentStackParamList = {
   BookingDetails: { bookingId: string };
   BookingStatus: { bookingId: string };
   Reviews: { artisanId: string };
-  ChatRoom: { chatId: string; otherUserName: string };
+  ChatRoom: { chatId: string; otherUserName: string; targetUserId?: string };
   ChatList: undefined;
   WriteReview: { bookingId: string; artisanId: string };
   Settings: undefined;

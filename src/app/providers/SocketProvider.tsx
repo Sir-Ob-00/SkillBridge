@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { socketClient } from '@services/socket/socketClient';
 import { useAuthStore, selectIsAuthenticated } from '@store/auth.store';
 import { useBookingSocket } from '@features/booking/hooks/useBookingSocket';
+import { useChatSocket } from '@features/chat/hooks/useChatSocket';
 import { setupNotificationSocketListeners } from '@modules/notifications/notifications.socket';
 
 interface SocketProviderProps {
@@ -17,6 +18,7 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
   const isAuthenticated = useAuthStore(selectIsAuthenticated);
 
   useBookingSocket();
+  useChatSocket();
 
   useEffect(() => {
     socketClient.onAuthErrorHandler(async () => {

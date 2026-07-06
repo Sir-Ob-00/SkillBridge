@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Alert, Text, View, Pressable } from 'react-native';
+import React, { useMemo, useState } from 'react';
+import { Text, View, Pressable } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Mail, Lock, User as UserIcon, Phone, UserPlus } from 'lucide-react-native';
 import { AuthStackParamList } from '../auth.types';
@@ -7,7 +7,9 @@ import { ScreenWrapper } from '@shared/layout';
 import { Button, Input } from '@shared/components';
 import { colors } from '@shared/ui/colors';
 import { useAuth } from '@hooks/useAuth';
-import { validateEmail, validatePassword, validatePhone } from '@utils/validateEmail';
+import { useFeedbackStore } from '@store/feedback.store';
+import { normalizeEmail, validateEmail, validatePassword, validatePhone } from '@utils/validateEmail';
+import { handleAuthError } from '@utils/handleAuthError';
 import { ROLE_LABELS } from '@constants/roles';
 import { UserRole } from '@app-types/index';
 
@@ -15,7 +17,9 @@ type Props = NativeStackScreenProps<AuthStackParamList, 'Register'>;
 
 export const RegisterScreen: React.FC<Props> = ({ navigation, route }) => {
   const role: UserRole = route.params?.role ?? 'student';
-  const { register, isLoading, error, clearError } = useAuth();
+  const isArtisan = role === 'artisan';
+  const { register, isLoading, clearError } = useAuth();
+  const feedbackStore = useFeedbackStore();
 
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -24,13 +28,24 @@ export const RegisterScreen: React.FC<Props> = ({ navigation, route }) => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
+  const isFormValid = useMemo(() => {
+    if (name.trim().length < 2) return false;
+    if (!validateEmail(email)) return false;
+    if (isArtisan && !validatePhone(phone)) return false;
+    if (!validatePassword(password)) return false;
+    if (password !== confirmPassword) return false;
+    return true;
+  }, [name, email, isArtisan, phone, password, confirmPassword]);
+
   const handleRegister = async () => {
     clearError();
     const errors: Record<string, string> = {};
 
     if (name.trim().length < 2) errors.name = 'Enter your full name.';
     if (!validateEmail(email)) errors.email = 'Enter a valid email address.';
-    if (phone && !validatePhone(phone)) errors.phone = 'Enter a valid phone number.';
+    if (isArtisan && !validatePhone(phone)) {
+      errors.phone = 'Enter a valid phone number.';
+    }
     if (!validatePassword(password)) {
       errors.password = 'Password must be at least 8 characters.';
     }
@@ -44,9 +59,15 @@ export const RegisterScreen: React.FC<Props> = ({ navigation, route }) => {
     if (Object.keys(errors).length > 0) return;
 
     try {
-      await register({ name, email, password, role, phone: phone || undefined });
-    } catch {
-      Alert.alert('Registration failed', 'Please try again.');
+      await register({
+        name: name.trim(),
+        email: normalizeEmail(email),
+        password,
+        role,
+        ...(isArtisan ? { phone: phone.trim() } : {}),
+      });
+    } catch (err) {
+      feedbackStore.show(handleAuthError(err));
     }
   };
 
@@ -84,15 +105,17 @@ export const RegisterScreen: React.FC<Props> = ({ navigation, route }) => {
         leftIcon={<Mail size={18} color={colors.gray400} />}
       />
 
-      <Input
-        label="Phone (optional)"
-        placeholder="0XX XXX XXXX"
-        keyboardType="phone-pad"
-        value={phone}
-        onChangeText={setPhone}
-        error={fieldErrors.phone}
-        leftIcon={<Phone size={18} color={colors.gray400} />}
-      />
+      {isArtisan && (
+        <Input
+          label="Phone"
+          placeholder="0XX XXX XXXX"
+          keyboardType="phone-pad"
+          value={phone}
+          onChangeText={setPhone}
+          error={fieldErrors.phone}
+          leftIcon={<Phone size={18} color={colors.gray400} />}
+        />
+      )}
 
       <Input
         label="Password"
@@ -114,14 +137,11 @@ export const RegisterScreen: React.FC<Props> = ({ navigation, route }) => {
         leftIcon={<Lock size={18} color={colors.gray400} />}
       />
 
-      {error ? (
-        <Text className="mb-3 text-sm text-red-500">{error}</Text>
-      ) : null}
-
       <Button
         label="Create Account"
         onPress={handleRegister}
         isLoading={isLoading}
+        disabled={!isFormValid}
         fullWidth
         size="lg"
       />

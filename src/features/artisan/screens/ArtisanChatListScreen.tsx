@@ -1,43 +1,71 @@
-import React, { useEffect, useState } from 'react';
-import { FlatList, Pressable, Text, View } from 'react-native';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { FlatList, RefreshControl, Text, View } from 'react-native';
 import { CompositeScreenProps } from '@react-navigation/native';
 import { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { MessageCircle } from 'lucide-react-native';
 import { ArtisanTabParamList, ArtisanStackParamList } from '../artisan.types';
 import { ScreenWrapper } from '@shared/layout';
-import { Avatar } from '@shared/components';
-import { Loader } from '@shared/components/Loader';
-import { EmptyState } from '@shared/components';
-import { chatApi } from '@features/chat/services/chat.api';
-import { Chat } from '@app-types/index';
-import { useAuthStore } from '@store/auth.store';
-import { formatRelativeTime } from '@utils/formatDate';
-import { truncate } from '@utils/helpers';
+import { Skeleton } from '@shared/components';
+import { useChatStore } from '@store/chat.store';
 import { colors } from '@shared/ui/colors';
+import ChatItem from '@features/chat/components/chat/ChatItem';
+import ChatEmptyState from '@features/chat/components/chat/ChatEmptyState';
+import { ChatSummary } from '@features/chat/types';
 
 type Props = CompositeScreenProps<
   BottomTabScreenProps<ArtisanTabParamList, 'Chat'>,
   NativeStackScreenProps<ArtisanStackParamList>
 >;
 
+const ChatSkeleton: React.FC = () => (
+  <View className="mb-2 flex-row items-center rounded-2xl bg-white p-3">
+    <View className="h-12 w-12 rounded-full bg-gray-200" />
+    <View className="ml-3 flex-1 gap-1.5">
+      <Skeleton width="50%" height={14} />
+      <Skeleton width="80%" height={12} />
+    </View>
+  </View>
+);
+
 export const ArtisanChatListScreen: React.FC<Props> = ({ navigation }) => {
-  const currentUserId = useAuthStore((state) => state.user?.id ?? '');
-  const [chats, setChats] = useState<Chat[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const chats = useChatStore((s) => s.chats);
+  const isLoading = useChatStore((s) => s.chatsLoading);
+  const fetchChats = useChatStore((s) => s.fetchChats);
 
   useEffect(() => {
-    chatApi
-      .listChats()
-      .then(setChats)
-      .catch(() => setChats([]))
-      .finally(() => setIsLoading(false));
-  }, []);
+    void fetchChats();
+  }, [fetchChats]);
 
-  const getOtherParticipantLabel = (chat: Chat): string => {
-    const otherId = chat.participantIds.find((id) => id !== currentUserId);
-    return otherId ?? 'Conversation';
-  };
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const handleRefresh = useCallback(async () => {
+    setIsRefreshing(true);
+    await fetchChats();
+    setIsRefreshing(false);
+  }, [fetchChats]);
+
+  const items = useMemo<ChatSummary[]>(
+    () =>
+      chats.map((chat) => ({
+        chatId: chat.id,
+        name: chat.otherUser.name,
+        avatarUrl: chat.otherUser.avatarUrl ?? '',
+        lastMessage: chat.lastMessage?.text ?? 'Start a conversation',
+        lastMessageTime:
+          chat.lastMessage?.createdAt ?? new Date().toISOString(),
+        unreadCount: chat.unreadCount ?? 0,
+      })),
+    [chats],
+  );
+
+  const handlePress = useCallback(
+    (chatId: string) => {
+      const chat = chats.find((c) => c.id === chatId);
+      const name = chat?.otherUser.name ?? 'Conversation';
+      navigation.navigate('ChatRoom', { chatId, otherUserName: name });
+    },
+    [chats, navigation],
+  );
 
   return (
     <ScreenWrapper scrollable={false} edges={['top', 'left', 'right']}>
@@ -47,53 +75,30 @@ export const ArtisanChatListScreen: React.FC<Props> = ({ navigation }) => {
         </Text>
       </View>
 
-      {isLoading ? (
-        <Loader label="Loading conversations..." />
-      ) : chats.length === 0 ? (
-        <EmptyState
-          icon={MessageCircle}
-          title="No conversations yet"
-          description="Your messages with students will appear here."
-        />
+      {isLoading && items.length === 0 ? (
+        <View className="px-4">
+          {[1, 2, 3, 4].map((i) => (
+            <ChatSkeleton key={i} />
+          ))}
+        </View>
+      ) : items.length === 0 ? (
+        <ChatEmptyState description="Your messages with students will appear here." />
       ) : (
         <FlatList
-          data={chats}
-          keyExtractor={(item) => item.id}
+          data={items}
+          keyExtractor={(item) => item.chatId}
           showsVerticalScrollIndicator={false}
           contentContainerClassName="px-4 pb-6"
-          renderItem={({ item }) => {
-            const label = getOtherParticipantLabel(item);
-            return (
-              <Pressable
-                onPress={() =>
-                  navigation.navigate('ChatRoom', {
-                    chatId: item.id,
-                    otherUserName: label,
-                  })
-                }
-                className="mb-2 flex-row items-center rounded-2xl bg-white p-3 active:opacity-80"
-              >
-                <Avatar name={label} size="md" />
-                <View className="ml-3 flex-1">
-                  <View className="flex-row items-center justify-between">
-                    <Text className="text-base font-semibold text-gray-900">
-                      {label}
-                    </Text>
-                    {item.lastMessage ? (
-                      <Text className="text-xs text-gray-400">
-                        {formatRelativeTime(item.lastMessage.createdAt)}
-                      </Text>
-                    ) : null}
-                  </View>
-                  {item.lastMessage ? (
-                    <Text className="mt-0.5 text-sm text-gray-500">
-                      {truncate(item.lastMessage.text, 50)}
-                    </Text>
-                  ) : null}
-                </View>
-              </Pressable>
-            );
-          }}
+          refreshControl={
+            <RefreshControl
+              refreshing={isRefreshing}
+              onRefresh={handleRefresh}
+              tintColor={colors.primary}
+            />
+          }
+          renderItem={({ item }) => (
+            <ChatItem chat={item} onPress={handlePress} />
+          )}
         />
       )}
     </ScreenWrapper>

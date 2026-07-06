@@ -63,7 +63,7 @@ export const AvailabilityScreen: React.FC<Props> = ({ navigation }) => {
   }
 
   return (
-    <ScreenWrapper edges={['top', 'left', 'right']}>
+    <ScreenWrapper scrollable keyboardAvoiding edges={['top', 'left', 'right']}>
       <Pressable onPress={() => navigation.goBack()} className="mt-2 mb-2 w-10">
         <ArrowLeft size={24} color={colors.gray800} />
       </Pressable>

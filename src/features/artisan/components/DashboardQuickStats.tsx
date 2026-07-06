@@ -51,7 +51,7 @@ export const DashboardQuickStats: React.FC<DashboardQuickStatsProps> = ({
           <StatCard
             icon={<Star size={18} color={colors.secondary} />}
             label={`Rating (${reviewCount})`}
-            value={reviewCount > 0 ? `${averageRating.toFixed(1)} ★` : '—'}
+            value={reviewCount > 0 && typeof averageRating === 'number' ? `${averageRating.toFixed(1)} ★` : '—'}
             bg="bg-secondary/20"
           />
         </View>

@@ -77,6 +77,7 @@ export interface Message {
   id: string;
   chatId: string;
   senderId: string;
+  receiverId?: string;
   text: string;
   createdAt: string;
   status: 'sent' | 'delivered' | 'read';
@@ -94,8 +95,14 @@ export interface PortfolioItem {
 export interface Chat {
   id: string;
   participantIds: string[];
+  otherUser: {
+    id: string;
+    name: string;
+    avatarUrl?: string;
+  };
   lastMessage?: Message;
   updatedAt: string;
+  unreadCount?: number;
 }
 
 export interface ApiResponse<T> {

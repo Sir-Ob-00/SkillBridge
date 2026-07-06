@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Text, TextInput, TextInputProps, View } from 'react-native';
+import { Pressable, Text, TextInput, TextInputProps, View } from 'react-native';
 import { Eye, EyeOff } from 'lucide-react-native';
 import { colors } from '@shared/ui/colors';
 
@@ -45,13 +45,17 @@ export const Input: React.FC<InputProps> = ({
         />
 
         {isPassword ? (
-          <Text onPress={() => setIsSecure((prev) => !prev)} className="ml-2">
+          <Pressable
+            onPress={() => setIsSecure((prev) => !prev)}
+            className="ml-2 p-2"
+            hitSlop={8}
+          >
             {isSecure ? (
               <Eye size={20} color={colors.gray400} />
             ) : (
               <EyeOff size={20} color={colors.gray400} />
             )}
-          </Text>
+          </Pressable>
         ) : null}
       </View>
 

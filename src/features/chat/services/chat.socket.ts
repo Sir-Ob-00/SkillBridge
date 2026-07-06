@@ -5,12 +5,11 @@ import { Message } from '@app-types/index';
 export interface SendMessagePayload {
   chatId: string;
   text: string;
-  senderId: string;
+  receiverId: string;
 }
 
 export interface TypingPayload {
   chatId: string;
-  userId: string;
   isTyping: boolean;
 }
 
@@ -41,7 +40,7 @@ export const chatSocket = {
     return () => socket?.off(SOCKET_EVENTS.RECEIVE_MESSAGE, callback);
   },
 
-  onTyping(callback: (payload: TypingPayload) => void): () => void {
+  onTyping(callback: (payload: TypingPayload & { userId: string }) => void): () => void {
     const socket = socketClient.getSocket();
     socket?.on(SOCKET_EVENTS.TYPING_INDICATOR, callback);
     return () => socket?.off(SOCKET_EVENTS.TYPING_INDICATOR, callback);

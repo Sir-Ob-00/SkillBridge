@@ -17,7 +17,10 @@ import { Button, Loader } from '@shared/components';
 import { RatingStars } from '../components/RatingStars';
 import { useFavorites } from '../hooks/useFavorites';
 import { artisanApi } from '@services/api/artisan.api';
-import { ArtisanProfile, PortfolioItem, Service } from '@app-types/index';
+import { ArtisanProfile, PortfolioItem, Service, Chat } from '@app-types/index';
+import { useChatStore } from '@store/chat.store';
+import { useAuthStore } from '@store/auth.store';
+import { computeChatId } from '@features/chat/utils';
 import { formatCurrency } from '@utils/currency';
 import { colors } from '@shared/ui/colors';
 import { useReviewsStore } from '@features/reviews/reviews.store';
@@ -38,6 +41,10 @@ export const ArtisanProfileScreen: React.FC<Props> = ({ route, navigation }) => 
   const { cache, fetchReviews } = useReviewsStore();
   const reviewsCache = cache[artisanId];
   const reviews = reviewsCache?.reviews ?? [];
+  const currentUserId = useAuthStore((s) => s.user?.id ?? '');
+  const storeChats = useChatStore((s) => s.chats);
+  const upsertChat = useChatStore((s) => s.upsertChat);
+  const [isStartingChat, setIsStartingChat] = useState(false);
 
   const [artisan, setArtisan] = useState<ArtisanProfile | null>(null);
   const [portfolio, setPortfolio] = useState<PortfolioItem[]>([]);
@@ -362,12 +369,34 @@ export const ArtisanProfileScreen: React.FC<Props> = ({ route, navigation }) => 
             label="Chat"
             variant="outline"
             leftIcon={<MessageCircle size={18} color={colors.primary} />}
-            onPress={() =>
+            isLoading={isStartingChat}
+            onPress={async () => {
+              if (!artisan?.userId || !currentUserId) return;
+              setIsStartingChat(true);
+
+              const chatId = computeChatId(currentUserId, artisan.userId);
+              const existingChat = storeChats.find((c) => c.id === chatId);
+              if (!existingChat) {
+                const localChat: Chat = {
+                  id: chatId,
+                  participantIds: [currentUserId, artisan.userId],
+                  otherUser: {
+                    id: artisan.userId,
+                    name: artisan.businessName,
+                    avatarUrl: artisan.avatarUrl,
+                  },
+                  updatedAt: new Date().toISOString(),
+                };
+                upsertChat(localChat);
+              }
+
               navigation.navigate('ChatRoom', {
-                chatId: `chat_${artisan.id}`,
+                chatId,
                 otherUserName: artisan.businessName,
-              })
-            }
+                targetUserId: artisan.userId,
+              });
+              setIsStartingChat(false);
+            }}
             className="flex-1"
           />
           <Pressable

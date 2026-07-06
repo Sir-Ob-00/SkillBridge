@@ -8,7 +8,8 @@ import { Button, Input } from '@shared/components';
 import { colors } from '@shared/ui/colors';
 import { useAuth } from '@hooks/useAuth';
 import { useFeedbackStore } from '@store/feedback.store';
-import { validateEmail } from '@utils/validateEmail';
+import { normalizeEmail, validateEmail } from '@utils/validateEmail';
+import { handleAuthError } from '@utils/handleAuthError';
 import { ROLE_LABELS } from '@constants/roles';
 
 type Props = NativeStackScreenProps<AuthStackParamList, 'Login'>;
@@ -21,38 +22,6 @@ export const LoginScreen: React.FC<Props> = ({ navigation, route }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [emailError, setEmailError] = useState<string | undefined>();
-
-  const getErrorFeedback = (err: unknown) => {
-    const apiError = err as { statusCode?: number; message?: string };
-    const statusCode = apiError.statusCode ?? 500;
-    const apiMessage = apiError.message;
-
-    if (statusCode === 0) {
-      return {
-        type: 'error' as const,
-        title: 'Connection Error',
-        message:
-          "We couldn't connect to the server. Please check your internet connection and try again.",
-        buttonLabel: 'Retry',
-      };
-    }
-
-    if (statusCode >= 500) {
-      return {
-        type: 'error' as const,
-        title: 'Something Went Wrong',
-        message: apiMessage || "We're experiencing a temporary issue. Please try again in a few moments.",
-        buttonLabel: 'OK',
-      };
-    }
-
-    return {
-      type: 'error' as const,
-      title: 'Unable to Sign In',
-      message: apiMessage || 'The email address or password you entered is incorrect. Please check your credentials and try again.',
-      buttonLabel: 'Try Again',
-    };
-  };
 
   const handleLogin = async () => {
     clearError();
@@ -69,19 +38,14 @@ export const LoginScreen: React.FC<Props> = ({ navigation, route }) => {
     }
 
     try {
-      await login({ email, password });
+      await login({ email: normalizeEmail(email), password });
       feedbackStore.show({
         type: 'success',
         title: 'Login Successful',
         message: 'Welcome back! Redirecting you to your dashboard...',
       });
     } catch (err) {
-      const feedback = getErrorFeedback(err);
-      feedbackStore.show({
-        type: feedback.type,
-        title: feedback.title,
-        message: feedback.message,
-      });
+      feedbackStore.show(handleAuthError(err));
     }
   };
 

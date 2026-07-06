@@ -11,7 +11,7 @@ export type ArtisanStackParamList = {
   ProfileSetup: undefined;
   Availability: undefined;
   BookingDetails: { bookingId: string };
-  ChatRoom: { chatId: string; otherUserName: string };
+  ChatRoom: { chatId: string; otherUserName: string; targetUserId?: string };
   Settings: undefined;
   Notifications: undefined;
 };

@@ -1,24 +1,31 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { FlatList, Text, View } from 'react-native';
+import { FlatList, Pressable, Text, View } from 'react-native';
 import { CompositeScreenProps } from '@react-navigation/native';
 import { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { StudentTabParamList, StudentStackParamList } from '../student.types';
 import { ScreenWrapper } from '@shared/layout';
 import { ArtisanCard } from '../components/ArtisanCard';
-import { HomeGreeting } from '../components/HomeGreeting';
 import { SearchCard } from '../components/SearchCard';
 import { CategoryFilter } from '../components/CategoryFilter';
 import { FeaturedArtisans } from '../components/FeaturedArtisans';
 import { PromoBanner } from '../components/PromoBanner';
 import { ArtisanCardSkeleton } from '@shared/components/Loader';
-import { EmptyState } from '@shared/components';
+import { Avatar, EmptyState } from '@shared/components';
 import { artisanApi } from '@services/api/artisan.api';
 import { ArtisanProfile } from '@app-types/index';
 import { useAuthStore } from '@store/auth.store';
 import { useFavorites } from '../hooks/useFavorites';
-import { Search as SearchIcon } from 'lucide-react-native';
+import { MessageCircle, Search as SearchIcon } from 'lucide-react-native';
+import { colors } from '@shared/ui/colors';
 import { NotificationBell } from '@modules/notifications/components/NotificationBell';
+
+function getGreeting(): string {
+  const hour = new Date().getHours();
+  if (hour < 12) return 'Good Morning ☀️';
+  if (hour < 17) return 'Good Afternoon 🌤';
+  return 'Good Evening 🌙';
+}
 
 type Props = CompositeScreenProps<
   BottomTabScreenProps<StudentTabParamList, 'Home'>,
@@ -26,7 +33,8 @@ type Props = CompositeScreenProps<
 >;
 
 export const HomeScreen: React.FC<Props> = ({ navigation }) => {
-  const userName = useAuthStore((state) => state.user?.name?.split(' ')[0]);
+  const user = useAuthStore((state) => state.user);
+  const userName = user?.name?.split(' ')[0];
   const { isFavorite, toggleFavorite } = useFavorites();
   const [artisans, setArtisans] = useState<ArtisanProfile[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
@@ -68,9 +76,29 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
 
   const headerContent = (
     <View className="pt-2">
-      <View className="flex-row items-center justify-between">
-        <HomeGreeting name={userName} />
-        <NotificationBell onPress={() => navigation.navigate('Notifications')} />
+      <View className="mb-6 flex-row items-center justify-between">
+        <View>
+          <Text className="text-sm font-medium tracking-wide text-gray-500">
+            {getGreeting()}
+          </Text>
+          <Text className="mt-0.5 font-heading text-3xl font-bold text-gray-900">
+            {userName ?? 'Student'}
+          </Text>
+        </View>
+        <View className="flex-row items-center gap-2">
+          <Pressable
+            onPress={() => navigation.navigate('ChatList')}
+            className="h-10 w-10 items-center justify-center rounded-full bg-gray-100 active:opacity-70"
+          >
+            <MessageCircle size={20} color={colors.gray600} />
+          </Pressable>
+          <NotificationBell onPress={() => navigation.navigate('Notifications')} />
+          <Avatar
+            name={user?.name ?? 'User'}
+            imageUrl={user?.avatarUrl}
+            size="md"
+          />
+        </View>
       </View>
       <SearchCard onPress={navigateToSearch} />
 

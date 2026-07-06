@@ -36,6 +36,7 @@ export const ScreenWrapper: React.FC<ScreenWrapperProps> = ({
       className={['flex-1', className ?? ''].join(' ')}
       contentContainerClassName={['px-4 pb-8', contentClassName ?? ''].join(' ')}
       showsVerticalScrollIndicator={false}
+      keyboardShouldPersistTaps="always"
       refreshControl={
         onRefresh ? (
           <RefreshControl
@@ -59,7 +60,7 @@ export const ScreenWrapper: React.FC<ScreenWrapperProps> = ({
       {keyboardAvoiding ? (
         <KeyboardAvoidingView
           className="flex-1"
-          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         >
           {content}
         </KeyboardAvoidingView>

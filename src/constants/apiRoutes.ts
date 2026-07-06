@@ -41,5 +41,9 @@ export const API_ROUTES = {
   CHAT: {
     LIST: '/chats',
     MESSAGES: (chatId: string) => `/chats/${chatId}/messages`,
+    MARK_READ: (chatId: string) => `/chats/${chatId}/read`,
+  },
+  REPORTS: {
+    CREATE: '/reports',
   },
 };

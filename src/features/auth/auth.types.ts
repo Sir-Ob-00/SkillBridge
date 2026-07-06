@@ -6,4 +6,5 @@ export type AuthStackParamList = {
   Login: { role?: UserRole } | undefined;
   Register: { role?: UserRole } | undefined;
   ForgotPassword: undefined;
+  CompleteProfile: undefined;
 };

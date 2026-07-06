@@ -2,12 +2,15 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { Message } from '@app-types/index';
 import { chatSocket } from '../services/chat.socket';
 import { useAuthStore } from '@store/auth.store';
+import { useChatStore } from '@store/chat.store';
 
 export const useChat = (chatId: string) => {
   const currentUserId = useAuthStore((state) => state.user?.id ?? '');
-  const [messages, setMessages] = useState<Message[]>([]);
   const [isOtherTyping, setIsOtherTyping] = useState(false);
   const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const addReceivedMessage = useChatStore((s) => s.addReceivedMessage);
+  const fetchMessages = useChatStore((s) => s.fetchMessages);
+  const messages = useChatStore((s) => s.messagesByChat[chatId] ?? []);
 
   useEffect(() => {
     let unsubscribeMessage: (() => void) | undefined;
@@ -18,7 +21,7 @@ export const useChat = (chatId: string) => {
 
       unsubscribeMessage = chatSocket.onReceiveMessage((message) => {
         if (message.chatId === chatId) {
-          setMessages((prev) => [...prev, message]);
+          addReceivedMessage(chatId, message);
         }
       });
 
@@ -38,6 +41,7 @@ export const useChat = (chatId: string) => {
     };
 
     void setup();
+    void fetchMessages(chatId);
 
     return () => {
       unsubscribeMessage?.();
@@ -45,19 +49,20 @@ export const useChat = (chatId: string) => {
       void chatSocket.leaveChat(chatId);
       if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
     };
-  }, [chatId, currentUserId]);
+  }, [chatId, currentUserId, addReceivedMessage, fetchMessages]);
 
   const sendMessage = useCallback(
     async (text: string) => {
       if (!text.trim()) return;
-      await chatSocket.sendMessage({ chatId, text, senderId: currentUserId });
+      await useChatStore.getState().sendMessage(chatId, text);
     },
-    [chatId, currentUserId]
+    [chatId]
   );
 
   const setTyping = useCallback(
     (isTyping: boolean) => {
-      void chatSocket.sendTyping({ chatId, userId: currentUserId, isTyping });
+      if (!currentUserId) return;
+      void chatSocket.sendTyping({ chatId, isTyping });
     },
     [chatId, currentUserId]
   );

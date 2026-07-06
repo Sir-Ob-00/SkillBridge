@@ -1,4 +1,4 @@
 export type ChatStackParamList = {
   ChatList: undefined;
-  ChatRoom: { chatId: string; otherUserName: string };
+  ChatRoom: { chatId: string; otherUserName: string; targetUserId?: string };
 };

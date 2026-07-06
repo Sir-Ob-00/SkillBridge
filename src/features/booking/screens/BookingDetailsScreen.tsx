@@ -1,7 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Alert, Pressable, Text, View } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { ArrowLeft, Calendar, DollarSign, FileText, User } from 'lucide-react-native';
+import { ArrowLeft, Calendar, DollarSign, FileText, Flag, User } from 'lucide-react-native';
 import { ScreenWrapper } from '@shared/layout';
 import { Button } from '@shared/components';
 import { Loader } from '@shared/components/Loader';
@@ -14,6 +14,7 @@ import { useRole } from '@hooks/useRole';
 import { useCallback } from 'react';
 import { BookingStatus } from '@app-types/index';
 import { useReviewsStore } from '@features/reviews/reviews.store';
+import { ReportForm } from '@features/reports/components/ReportForm';
 
 type Props = NativeStackScreenProps<{ BookingDetails: { bookingId: string } }, 'BookingDetails'>;
 
@@ -22,6 +23,7 @@ export const BookingDetailsScreen: React.FC<Props> = ({ route, navigation }) => 
   const role = useRole();
   const { selectedBooking, isLoading, fetchBookingById, updateStatus } = useBookingStore();
   const { isReviewed, markReviewed } = useReviewsStore();
+  const [reportVisible, setReportVisible] = useState(false);
 
   React.useEffect(() => {
     void fetchBookingById(bookingId);
@@ -58,6 +60,7 @@ export const BookingDetailsScreen: React.FC<Props> = ({ route, navigation }) => 
   const displayPrice = booking.service?.price ?? booking.price ?? 0;
   const customerName = booking.student?.name ?? `Student #${booking.studentId.slice(-4).toUpperCase()}`;
   const artisanName = booking.artisan?.businessName ?? `Artisan #${booking.artisanId.slice(-4).toUpperCase()}`;
+  const reportTargetUserId = isArtisan ? booking.studentId : booking.artisanId;
 
   return (
     <ScreenWrapper scrollable edges={['top', 'left', 'right']}>
@@ -69,7 +72,15 @@ export const BookingDetailsScreen: React.FC<Props> = ({ route, navigation }) => 
         <Text className="flex-1 font-heading text-2xl font-bold text-gray-900" numberOfLines={1}>
           {serviceName}
         </Text>
-        <StatusBadge status={booking.status} />
+        <View className="flex-row items-center gap-2">
+          <Pressable
+            onPress={() => setReportVisible(true)}
+            accessibilityLabel="Report"
+          >
+            <Flag size={18} color={colors.gray600} />
+          </Pressable>
+          <StatusBadge status={booking.status} />
+        </View>
       </View>
 
       <View className="mt-6 rounded-2xl border border-gray-200 bg-white p-4">
@@ -186,6 +197,12 @@ export const BookingDetailsScreen: React.FC<Props> = ({ route, navigation }) => 
           />
         )
       ) : null}
+
+      <ReportForm
+        visible={reportVisible}
+        onClose={() => setReportVisible(false)}
+        targetUserId={reportTargetUserId}
+      />
     </ScreenWrapper>
   );
 };

@@ -16,4 +16,11 @@ export const chatApi = {
     >(API_ROUTES.CHAT.MESSAGES(chatId), { params: { page, pageSize } });
     return data.data;
   },
+
+  markAsRead: async (chatId: string) => {
+    const { data } = await apiClient.post<ApiResponse<void>>(
+      API_ROUTES.CHAT.MARK_READ(chatId)
+    );
+    return data.data;
+  },
 };
