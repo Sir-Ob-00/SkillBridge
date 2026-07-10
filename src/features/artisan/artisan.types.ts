@@ -14,7 +14,6 @@ export type ArtisanStackParamList = {
   ChatRoom: { chatId: string; otherUserName: string; targetUserId?: string };
   Settings: undefined;
   Notifications: undefined;
-  EmailVerification: undefined;
   Onboarding: undefined;
   PendingReview: undefined;
   UnderReview: undefined;

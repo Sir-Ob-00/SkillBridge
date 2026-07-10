@@ -1,7 +1,6 @@
 export type UserRole = 'student' | 'artisan';
 
 export type OnboardingStatus =
-  | 'EMAIL_VERIFICATION_PENDING'
   | 'PENDING_PROFILE'
   | 'PENDING_REVIEW'
   | 'UNDER_REVIEW'
@@ -19,7 +18,6 @@ export interface User {
   role: UserRole;
   avatarUrl?: string;
   isVerified: boolean;
-  emailVerified?: boolean;
   onboardingStatus?: OnboardingStatus;
   createdAt: string;
 }

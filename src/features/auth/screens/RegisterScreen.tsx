@@ -6,12 +6,10 @@ import { AuthStackParamList } from '../auth.types';
 import { ScreenWrapper } from '@shared/layout';
 import { Button, Input } from '@shared/components';
 import { colors } from '@shared/ui/colors';
-import { CommonActions } from '@react-navigation/native';
 import { useAuth } from '@hooks/useAuth';
 import { useFeedbackStore } from '@store/feedback.store';
 import { normalizeEmail, validateEmail, validatePassword, validatePhone } from '@utils/validateEmail';
 import { handleAuthError } from '@utils/handleAuthError';
-import { ApiError } from '@features/auth/services/client';
 import { ROLE_LABELS } from '@constants/roles';
 import { UserRole } from '@app-types/index';
 
@@ -70,23 +68,13 @@ export const RegisterScreen: React.FC<Props> = ({ navigation, route }) => {
         ...(isArtisan ? { phone: phone.trim() } : {}),
       });
 
-      navigation.dispatch(
-        CommonActions.navigate({
-          name: 'EmailVerification',
-          params: { email: normalizedEmail, role },
-        })
-      );
+      feedbackStore.show({
+        type: 'success',
+        title: 'Registration successful',
+        message: 'Your account has been created. Please sign in.',
+      });
+      navigation.navigate('Login', { role });
     } catch (err) {
-      const apiErr = err as ApiError;
-      if (apiErr.statusCode === 409 && apiErr.message?.includes('email is not verified')) {
-        navigation.dispatch(
-          CommonActions.navigate({
-            name: 'EmailVerification',
-            params: { email: normalizeEmail(email), role },
-          })
-        );
-        return;
-      }
       feedbackStore.show(handleAuthError(err));
     }
   };

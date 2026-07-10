@@ -82,7 +82,7 @@ apiClient.interceptors.response.use(
               }
               resolve(apiClient(originalRequest));
             } catch (err) {
-              reject(err);
+              reject(normalizeError(err as AxiosError));
             }
           });
         });
@@ -98,7 +98,7 @@ apiClient.interceptors.response.use(
 
         if (!refreshToken) {
           await forceLogout();
-          return Promise.reject(error);
+          return Promise.reject(normalizeError(error));
         }
 
         const { data } = await axios.post<ApiResponse<{ accessToken: string; refreshToken?: string }>>(
@@ -133,7 +133,7 @@ apiClient.interceptors.response.use(
       } catch (refreshError) {
         processQueue(refreshError as AxiosError);
         await forceLogout();
-        return Promise.reject(refreshError);
+        return Promise.reject(normalizeError(refreshError as AxiosError));
       } finally {
         isRefreshing = false;
       }

@@ -6,11 +6,6 @@ export interface AuthFeedback {
   message: string;
 }
 
-export function isEmailNotVerifiedError(err: unknown): boolean {
-  const apiErr = err as ApiError;
-  return apiErr.statusCode === 403 || apiErr.message === 'EMAIL_NOT_VERIFIED';
-}
-
 const ERROR_MAP: Record<number, { title: string; defaultMessage: string }> = {
   0: {
     title: 'Connection Error',
@@ -22,14 +17,9 @@ const ERROR_MAP: Record<number, { title: string; defaultMessage: string }> = {
     defaultMessage: 'Please check your information and try again.',
   },
   401: {
-    title: 'Unable to Sign In',
+    title: 'Login Failed',
     defaultMessage:
       'The email or password you entered is incorrect. Please try again.',
-  },
-  403: {
-    title: 'Email Not Verified',
-    defaultMessage:
-      'Please verify your email address before signing in.',
   },
   404: {
     title: 'Not Found',

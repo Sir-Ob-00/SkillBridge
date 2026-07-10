@@ -37,22 +37,6 @@ export const authApi = {
     return data.data;
   },
 
-  verifyEmail: async (payload: { email: string; otp: string }) => {
-    const { data } = await apiClient.post<ApiResponse<{ message: string }>>(
-      API_ROUTES.AUTH.VERIFY_EMAIL,
-      payload
-    );
-    return data.data;
-  },
-
-  resendEmailOtp: async (payload: { email: string }) => {
-    const { data } = await apiClient.post<ApiResponse<{ message: string }>>(
-      API_ROUTES.AUTH.RESEND_EMAIL_OTP,
-      payload
-    );
-    return data.data;
-  },
-
   forgotPassword: async (payload: { email: string }) => {
     const { data } = await apiClient.post<ApiResponse<{ message: string }>>(
       API_ROUTES.AUTH.FORGOT_PASSWORD,

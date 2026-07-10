@@ -5,7 +5,7 @@ import { OnboardingScreen } from '@features/auth/screens/OnboardingScreen';
 import { RoleSelectScreen } from '@features/auth/screens/RoleSelectScreen';
 import { LoginScreen } from '@features/auth/screens/LoginScreen';
 import { RegisterScreen } from '@features/auth/screens/RegisterScreen';
-import { EmailVerificationScreen } from '@features/auth/screens/EmailVerificationScreen';
+
 import { ForgotPasswordScreen } from '@features/auth/screens/ForgotPasswordScreen';
 import { CompleteProfileScreen } from '@features/auth/screens/CompleteProfileScreen';
 
@@ -21,7 +21,6 @@ export const AuthNavigator: React.FC = () => {
       <Stack.Screen name="RoleSelect" component={RoleSelectScreen} />
       <Stack.Screen name="Login" component={LoginScreen} />
       <Stack.Screen name="Register" component={RegisterScreen} />
-      <Stack.Screen name="EmailVerification" component={EmailVerificationScreen} />
       <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
       <Stack.Screen name="CompleteProfile" component={CompleteProfileScreen} />
     </Stack.Navigator>

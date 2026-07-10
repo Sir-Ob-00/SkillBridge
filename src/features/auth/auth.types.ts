@@ -5,7 +5,6 @@ export type AuthStackParamList = {
   RoleSelect: undefined;
   Login: { role?: UserRole } | undefined;
   Register: { role?: UserRole } | undefined;
-  EmailVerification: { email: string; role: UserRole };
   ForgotPassword: undefined;
   CompleteProfile: undefined;
 };

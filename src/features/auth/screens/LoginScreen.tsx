@@ -9,7 +9,7 @@ import { colors } from '@shared/ui/colors';
 import { useAuth } from '@hooks/useAuth';
 import { useFeedbackStore } from '@store/feedback.store';
 import { normalizeEmail, validateEmail } from '@utils/validateEmail';
-import { handleAuthError, isEmailNotVerifiedError } from '@utils/handleAuthError';
+import { handleAuthError } from '@utils/handleAuthError';
 import { ROLE_LABELS } from '@constants/roles';
 
 type Props = NativeStackScreenProps<AuthStackParamList, 'Login'>;
@@ -45,10 +45,6 @@ export const LoginScreen: React.FC<Props> = ({ navigation, route }) => {
         message: 'Welcome back! Redirecting you to your dashboard...',
       });
     } catch (err) {
-      if (isEmailNotVerifiedError(err)) {
-        navigation.navigate('EmailVerification', { email: normalizeEmail(email), role: role || 'student' });
-        return;
-      }
       feedbackStore.show(handleAuthError(err));
     }
   };
