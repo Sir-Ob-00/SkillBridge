@@ -6,6 +6,11 @@ export interface AuthFeedback {
   message: string;
 }
 
+export function isEmailNotVerifiedError(err: unknown): boolean {
+  const apiErr = err as ApiError;
+  return apiErr.statusCode === 403 || apiErr.message === 'EMAIL_NOT_VERIFIED';
+}
+
 const ERROR_MAP: Record<number, { title: string; defaultMessage: string }> = {
   0: {
     title: 'Connection Error',
@@ -20,6 +25,11 @@ const ERROR_MAP: Record<number, { title: string; defaultMessage: string }> = {
     title: 'Unable to Sign In',
     defaultMessage:
       'The email or password you entered is incorrect. Please try again.',
+  },
+  403: {
+    title: 'Email Not Verified',
+    defaultMessage:
+      'Please verify your email address before signing in.',
   },
   404: {
     title: 'Not Found',
@@ -71,10 +81,11 @@ export function handleAuthError(err: unknown): AuthFeedback {
         message: firstError || mapping.defaultMessage,
       };
     }
+    const isCodeMessage = typeof apiMessage === 'string' && /^[A-Z_]+$/.test(apiMessage);
     return {
       type: 'error',
       title: mapping.title,
-      message: apiMessage || mapping.defaultMessage,
+      message: isCodeMessage ? mapping.defaultMessage : (apiMessage || mapping.defaultMessage),
     };
   }
 

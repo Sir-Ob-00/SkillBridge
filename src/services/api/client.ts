@@ -167,9 +167,9 @@ async function forceLogout(): Promise<void> {
 }
 
 export function normalizeError(error: AxiosError): ApiError {
-  const responseData = error.response?.data as { data?: unknown; message?: string } | undefined;
+  const responseData = error.response?.data as Record<string, unknown> | undefined;
 
-  if (responseData?.data) {
+  if (responseData?.data && typeof responseData.data === 'object') {
     return {
       message:
         (responseData.data as { message?: string }).message || 'Something went wrong',
@@ -178,9 +178,16 @@ export function normalizeError(error: AxiosError): ApiError {
     };
   }
 
-  if (responseData?.message) {
+  if (typeof responseData?.message === 'string') {
     return {
-      message: responseData.message,
+      message: responseData.message as string,
+      statusCode: error.response?.status || 500,
+    };
+  }
+
+  if (typeof responseData?.code === 'string') {
+    return {
+      message: responseData.code as string,
       statusCode: error.response?.status || 500,
     };
   }

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Alert, Pressable, Text, View } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Mail, ArrowLeft, KeyRound } from 'lucide-react-native';
 import { AuthStackParamList } from '../auth.types';
@@ -7,11 +7,14 @@ import { ScreenWrapper } from '@shared/layout';
 import { Button, Input } from '@shared/components';
 import { colors } from '@shared/ui/colors';
 import { validateEmail } from '@utils/validateEmail';
+import { handleAuthError } from '@utils/handleAuthError';
+import { useFeedbackStore } from '@store/feedback.store';
 import { authApi } from '../services/auth.api';
 
 type Props = NativeStackScreenProps<AuthStackParamList, 'ForgotPassword'>;
 
 export const ForgotPasswordScreen: React.FC<Props> = ({ navigation }) => {
+  const feedbackStore = useFeedbackStore();
   const [email, setEmail] = useState('');
   const [error, setError] = useState<string | undefined>();
   const [isLoading, setIsLoading] = useState(false);
@@ -28,8 +31,8 @@ export const ForgotPasswordScreen: React.FC<Props> = ({ navigation }) => {
     try {
       await authApi.forgotPassword({ email });
       setSent(true);
-    } catch {
-      Alert.alert('Something went wrong', 'Please try again later.');
+    } catch (err) {
+      feedbackStore.show(handleAuthError(err));
     } finally {
       setIsLoading(false);
     }

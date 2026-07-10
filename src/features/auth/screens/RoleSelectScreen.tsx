@@ -1,7 +1,7 @@
 import React from 'react';
-import { Text, View, Pressable } from 'react-native';
+import { Image, Text, View, Pressable } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { Scissors, GraduationCap, Sparkles } from 'lucide-react-native';
+import { Scissors, GraduationCap } from 'lucide-react-native';
 import { AuthStackParamList } from '../auth.types';
 import { ScreenWrapper } from '@shared/layout';
 import { colors } from '@shared/ui/colors';
@@ -39,8 +39,8 @@ export const RoleSelectScreen: React.FC<Props> = ({ navigation }) => {
   return (
     <ScreenWrapper scrollable>
       <View className="mt-8 mb-10 items-center">
-        <View className="mb-6 h-20 w-20 items-center justify-center rounded-3xl bg-primary/10">
-          <Sparkles size={36} color={colors.primary} />
+        <View className="mb-6 h-40 w-40 items-center justify-center overflow-hidden rounded-2xl">
+          <Image source={require('../../../../assets/icon.png')} className="h-full w-full" resizeMode="contain" />
         </View>
         <Text className="font-heading text-4xl font-bold text-gray-900 text-center">
           SkillBridge

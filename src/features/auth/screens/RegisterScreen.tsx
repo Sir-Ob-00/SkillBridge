@@ -6,10 +6,12 @@ import { AuthStackParamList } from '../auth.types';
 import { ScreenWrapper } from '@shared/layout';
 import { Button, Input } from '@shared/components';
 import { colors } from '@shared/ui/colors';
+import { CommonActions } from '@react-navigation/native';
 import { useAuth } from '@hooks/useAuth';
 import { useFeedbackStore } from '@store/feedback.store';
 import { normalizeEmail, validateEmail, validatePassword, validatePhone } from '@utils/validateEmail';
 import { handleAuthError } from '@utils/handleAuthError';
+import { ApiError } from '@features/auth/services/client';
 import { ROLE_LABELS } from '@constants/roles';
 import { UserRole } from '@app-types/index';
 
@@ -59,14 +61,32 @@ export const RegisterScreen: React.FC<Props> = ({ navigation, route }) => {
     if (Object.keys(errors).length > 0) return;
 
     try {
+      const normalizedEmail = normalizeEmail(email);
       await register({
         name: name.trim(),
-        email: normalizeEmail(email),
+        email: normalizedEmail,
         password,
         role,
         ...(isArtisan ? { phone: phone.trim() } : {}),
       });
+
+      navigation.dispatch(
+        CommonActions.navigate({
+          name: 'EmailVerification',
+          params: { email: normalizedEmail, role },
+        })
+      );
     } catch (err) {
+      const apiErr = err as ApiError;
+      if (apiErr.statusCode === 409 && apiErr.message?.includes('email is not verified')) {
+        navigation.dispatch(
+          CommonActions.navigate({
+            name: 'EmailVerification',
+            params: { email: normalizeEmail(email), role },
+          })
+        );
+        return;
+      }
       feedbackStore.show(handleAuthError(err));
     }
   };
@@ -94,16 +114,16 @@ export const RegisterScreen: React.FC<Props> = ({ navigation, route }) => {
         leftIcon={<UserIcon size={18} color={colors.gray400} />}
       />
 
-      <Input
-        label="Email"
-        placeholder="you@university.edu"
-        autoCapitalize="none"
-        keyboardType="email-address"
-        value={email}
-        onChangeText={setEmail}
-        error={fieldErrors.email}
-        leftIcon={<Mail size={18} color={colors.gray400} />}
-      />
+        <Input
+          label="Email"
+          placeholder="you@university.edu"
+          helperText="Enter a valid email address"
+          autoCapitalize="none"
+          keyboardType="email-address"
+          value={email}
+          onChangeText={setEmail}
+          error={fieldErrors.email}
+        />
 
       {isArtisan && (
         <Input

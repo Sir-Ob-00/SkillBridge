@@ -1,6 +1,6 @@
 import { apiClient, normalizeError } from './client';
 import { API_ROUTES } from '@constants/apiRoutes';
-import { ApiResponse, User, UserRole } from '@app-types/index';
+import { ApiResponse, AuthResponse, UserRole } from '@app-types/index';
 
 export interface LoginPayload {
   email: string;
@@ -13,21 +13,6 @@ export interface RegisterPayload {
   password: string;
   role: UserRole;
   phone?: string;
-}
-
-export interface ForgotPasswordPayload {
-  email: string;
-}
-
-export interface ResetPasswordPayload {
-  token: string;
-  password: string;
-}
-
-export interface AuthResponse {
-  user: User;
-  accessToken: string;
-  refreshToken: string;
 }
 
 export interface RefreshResponse {
@@ -45,14 +30,30 @@ export const authApi = {
   },
 
   register: async (payload: RegisterPayload) => {
-    const { data } = await apiClient.post<ApiResponse<AuthResponse>>(
+    const { data } = await apiClient.post<ApiResponse<{ user: { email: string; id: string }; message: string }>>(
       API_ROUTES.AUTH.REGISTER,
       payload
     );
     return data.data;
   },
 
-  forgotPassword: async (payload: ForgotPasswordPayload) => {
+  verifyEmail: async (payload: { email: string; otp: string }) => {
+    const { data } = await apiClient.post<ApiResponse<{ message: string }>>(
+      API_ROUTES.AUTH.VERIFY_EMAIL,
+      payload
+    );
+    return data.data;
+  },
+
+  resendEmailOtp: async (payload: { email: string }) => {
+    const { data } = await apiClient.post<ApiResponse<{ message: string }>>(
+      API_ROUTES.AUTH.RESEND_EMAIL_OTP,
+      payload
+    );
+    return data.data;
+  },
+
+  forgotPassword: async (payload: { email: string }) => {
     const { data } = await apiClient.post<ApiResponse<{ message: string }>>(
       API_ROUTES.AUTH.FORGOT_PASSWORD,
       payload
@@ -60,7 +61,7 @@ export const authApi = {
     return data.data;
   },
 
-  resetPassword: async (payload: ResetPasswordPayload) => {
+  resetPassword: async (payload: { token: string; password: string }) => {
     const { data } = await apiClient.post<ApiResponse<{ message: string }>>(
       API_ROUTES.AUTH.RESET_PASSWORD,
       payload

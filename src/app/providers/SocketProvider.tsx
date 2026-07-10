@@ -23,7 +23,7 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
   useEffect(() => {
     socketClient.onAuthErrorHandler(async () => {
       try {
-        await useAuthStore.getState().refreshToken();
+        await useAuthStore.getState().refreshAccessToken();
         void socketClient.connect();
       } catch {
         // refreshToken already called logout() on failure

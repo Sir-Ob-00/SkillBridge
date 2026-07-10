@@ -1,5 +1,16 @@
 export type UserRole = 'student' | 'artisan';
 
+export type OnboardingStatus =
+  | 'EMAIL_VERIFICATION_PENDING'
+  | 'PENDING_PROFILE'
+  | 'PENDING_REVIEW'
+  | 'UNDER_REVIEW'
+  | 'CHANGES_REQUESTED'
+  | 'ACTIVE'
+  | 'REJECTED';
+
+export type Gender = 'male' | 'female' | 'other';
+
 export interface User {
   id: string;
   name: string;
@@ -8,6 +19,8 @@ export interface User {
   role: UserRole;
   avatarUrl?: string;
   isVerified: boolean;
+  emailVerified?: boolean;
+  onboardingStatus?: OnboardingStatus;
   createdAt: string;
 }
 
@@ -116,4 +129,57 @@ export interface PaginatedResponse<T> {
   page: number;
   totalPages: number;
   totalItems: number;
+}
+
+export interface AvailabilitySlot {
+  day: string;
+  startTime: string;
+  endTime: string;
+}
+
+export interface StudentVerification {
+  institution: string;
+  studentId: string;
+  verificationImageUrl?: string;
+}
+
+export interface OnboardingServiceItem {
+  title: string;
+  description: string;
+  price: number;
+  durationMinutes: number;
+  categoryId: string;
+  isActive: boolean;
+}
+
+export interface OnboardingHistoryItem {
+  fromStatus: string;
+  toStatus: string;
+  notes: string;
+  createdAt: string;
+}
+
+export interface PortfolioItemData {
+  imageUrl: string;
+  caption: string;
+}
+
+export interface OnboardingDraft {
+  currentStep: OnboardingStepId;
+  application: Record<string, unknown>;
+  updatedAt: string;
+}
+
+export type OnboardingStepId = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
+
+export interface AuthResponse {
+  user: User;
+  accessToken: string;
+  refreshToken: string;
+}
+
+export interface Skill {
+  id: string;
+  name: string;
+  categoryId: string;
 }

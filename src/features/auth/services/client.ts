@@ -1,6 +1,10 @@
-import axios, { AxiosError, AxiosInstance, InternalAxiosRequestConfig, AxiosResponse } from 'axios';
-import { secureStorage } from '@services/storage/secureStorage';
+import axios, {
+  AxiosError,
+  AxiosInstance,
+  InternalAxiosRequestConfig,
+} from 'axios';
 import { CONFIG } from '@constants/config';
+import { secureStorage } from '@services/storage/secureStorage';
 import { API_ROUTES } from '@constants/apiRoutes';
 import { ApiResponse } from '@app-types/index';
 import { logger } from '@utils/logger';
@@ -11,22 +15,24 @@ export interface ApiError {
   errors?: Record<string, string[]>;
 }
 
-type RequestInterceptorConfig = InternalAxiosRequestConfig & { _retry?: boolean };
+interface RetriableRequestConfig extends InternalAxiosRequestConfig {
+  _retry?: boolean;
+}
 
 let isRefreshing = false;
-let pendingRequests: Array<() => void> = [];
+let refreshSubscribers: Array<() => void> = [];
 
 export const subscribeTokenRefresh = (callback: () => void) => {
-  pendingRequests.push(callback);
+  refreshSubscribers.push(callback);
 };
 
 export const unsubscribeTokenRefresh = () => {
-  pendingRequests = [];
+  refreshSubscribers = [];
 };
 
 const processQueue = (error: AxiosError | null) => {
-  pendingRequests.forEach((cb) => cb());
-  pendingRequests = [];
+  refreshSubscribers.forEach((cb) => cb());
+  refreshSubscribers = [];
 };
 
 let logoutHandler: (() => Promise<void>) | null = null;
@@ -44,71 +50,78 @@ export const apiClient: AxiosInstance = axios.create({
   },
 });
 
-async function attachAuthToken(
-  config: InternalAxiosRequestConfig
-): Promise<InternalAxiosRequestConfig> {
-  const accessToken = await secureStorage.getSecureItem(CONFIG.STORAGE_KEYS.ACCESS_TOKEN);
-  if (accessToken && config.headers) {
-    config.headers.Authorization = `Bearer ${accessToken}`;
+apiClient.interceptors.request.use(async (config) => {
+  const token = await secureStorage.getSecureItem(
+    CONFIG.STORAGE_KEYS.ACCESS_TOKEN
+  );
+  if (token && config.headers) {
+    config.headers.Authorization = `Bearer ${token}`;
   }
   return config;
-}
-
-apiClient.interceptors.request.use(
-  (config: InternalAxiosRequestConfig) => {
-    return attachAuthToken(config);
-  },
-  (error) => {
-    return Promise.reject(error);
-  }
-);
+});
 
 apiClient.interceptors.response.use(
-  (response: AxiosResponse<ApiResponse<unknown>>) => {
-    return response;
-  },
-  async (error: AxiosError<ApiResponse<unknown>>) => {
-    const originalRequest = error.config as RequestInterceptorConfig;
+  (response) => response,
+  async (error: AxiosError) => {
+    const originalRequest = error.config as RetriableRequestConfig;
 
-    if (error.response?.status === 401 && !originalRequest._retry) {
+    if (
+      error.response?.status === 401 &&
+      originalRequest &&
+      !originalRequest._retry
+    ) {
       if (isRefreshing) {
         return new Promise((resolve, reject) => {
           subscribeTokenRefresh(async () => {
             try {
-              const accessToken = await secureStorage.getSecureItem(CONFIG.STORAGE_KEYS.ACCESS_TOKEN);
+              const accessToken = await secureStorage.getSecureItem(
+                CONFIG.STORAGE_KEYS.ACCESS_TOKEN
+              );
               if (accessToken && originalRequest.headers) {
                 originalRequest.headers.Authorization = `Bearer ${accessToken}`;
               }
-              const response = await apiClient(originalRequest);
-              resolve(response);
+              resolve(apiClient(originalRequest));
             } catch (err) {
               reject(err);
             }
           });
-        }) as Promise<AxiosResponse<ApiResponse<unknown>>>;
+        });
       }
 
       originalRequest._retry = true;
       isRefreshing = true;
 
       try {
-        const refreshToken = await secureStorage.getSecureItem(CONFIG.STORAGE_KEYS.REFRESH_TOKEN);
+        const refreshToken = await secureStorage.getSecureItem(
+          CONFIG.STORAGE_KEYS.REFRESH_TOKEN
+        );
 
         if (!refreshToken) {
           await forceLogout();
           return Promise.reject(error);
         }
 
-        const response = await axios.post<ApiResponse<{ accessToken: string; refreshToken: string }>>(
+        const { data } = await axios.post<ApiResponse<{ accessToken: string; refreshToken?: string }>>(
           `${CONFIG.API_BASE_URL}${API_ROUTES.AUTH.REFRESH}`,
           { refreshToken }
         );
 
-        const { accessToken: newAccessToken, refreshToken: newRefreshToken } = response.data.data;
+        const newAccessToken: string = data.data.accessToken;
+        const newRefreshToken: string | undefined = data.data.refreshToken;
 
         await Promise.all([
-          secureStorage.setSecureItem(CONFIG.STORAGE_KEYS.ACCESS_TOKEN, newAccessToken),
-          secureStorage.setSecureItem(CONFIG.STORAGE_KEYS.REFRESH_TOKEN, newRefreshToken),
+          secureStorage.setSecureItem(
+            CONFIG.STORAGE_KEYS.ACCESS_TOKEN,
+            newAccessToken
+          ),
+          ...(newRefreshToken
+            ? [
+                secureStorage.setSecureItem(
+                  CONFIG.STORAGE_KEYS.REFRESH_TOKEN,
+                  newRefreshToken
+                ),
+              ]
+            : []),
         ]);
 
         processQueue(null);
@@ -116,7 +129,6 @@ apiClient.interceptors.response.use(
         if (originalRequest.headers) {
           originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
         }
-
         return apiClient(originalRequest);
       } catch (refreshError) {
         processQueue(refreshError as AxiosError);
@@ -133,7 +145,9 @@ apiClient.interceptors.response.use(
 
 async function forceLogout(): Promise<void> {
   try {
-    const refreshToken = await secureStorage.getSecureItem(CONFIG.STORAGE_KEYS.REFRESH_TOKEN);
+    const refreshToken = await secureStorage.getSecureItem(
+      CONFIG.STORAGE_KEYS.REFRESH_TOKEN
+    );
     if (refreshToken) {
       await apiClient.post(API_ROUTES.AUTH.LOGOUT, { refreshToken });
     }
@@ -152,20 +166,29 @@ async function forceLogout(): Promise<void> {
   }
 }
 
-export function normalizeError(error: AxiosError<ApiResponse<unknown>>): ApiError {
-  if (error.response?.data?.data) {
-    const data = error.response.data.data as { message?: string };
+export function normalizeError(error: AxiosError): ApiError {
+  const responseData = error.response?.data as Record<string, unknown> | undefined;
+
+  if (responseData?.data && typeof responseData.data === 'object') {
     return {
-      message: data.message || 'Something went wrong',
-      statusCode: error.response.status,
-      errors: error.response.data.data as Record<string, string[]> | undefined,
+      message:
+        (responseData.data as { message?: string }).message || 'Something went wrong',
+      statusCode: error.response?.status || 500,
+      errors: responseData.data as Record<string, string[]>,
     };
   }
 
-  if (error.response?.data?.message) {
+  if (typeof responseData?.message === 'string') {
     return {
-      message: error.response.data.message,
-      statusCode: error.response.status,
+      message: responseData.message as string,
+      statusCode: error.response?.status || 500,
+    };
+  }
+
+  if (typeof responseData?.code === 'string') {
+    return {
+      message: responseData.code as string,
+      statusCode: error.response?.status || 500,
     };
   }
 
@@ -181,5 +204,3 @@ export function normalizeError(error: AxiosError<ApiResponse<unknown>>): ApiErro
     statusCode: error.response?.status || 500,
   };
 }
-
-export { normalizeError as errorHandler };

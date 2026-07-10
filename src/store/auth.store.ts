@@ -2,30 +2,39 @@ import { create } from 'zustand';
 import { User, UserRole } from '@app-types/index';
 import { CONFIG } from '@constants/config';
 import { secureStorage } from '@services/storage/secureStorage';
-import { authApi, RefreshResponse } from '@features/auth/services/auth.api';
+import { authApi } from '@features/auth/services/auth.api';
 import { socketClient } from '@services/socket/socketClient';
 import { setLogoutHandler as setAuthLogoutHandler } from '@features/auth/services/client';
 import { setLogoutHandler as setApiLogoutHandler } from '@services/api/client';
 
+export interface RegisterResult {
+  user: { email: string; id: string };
+  message: string;
+}
+
 interface AuthState {
   user: User | null;
   accessToken: string | null;
+  refreshToken: string | null;
+  isAuthenticated: boolean;
   isLoading: boolean;
   isInitializing: boolean;
   error: string | null;
 
   initialize: () => Promise<void>;
   login: (payload: { email: string; password: string }) => Promise<void>;
-  register: (payload: { name: string; email: string; password: string; role: UserRole; phone?: string }) => Promise<void>;
-  refreshToken: () => Promise<void>;
+  register: (payload: { name: string; email: string; password: string; role: UserRole; phone?: string }) => Promise<RegisterResult>;
+  refreshAccessToken: () => Promise<void>;
   logout: () => Promise<void>;
   setUser: (user: User | null) => void;
   clearError: () => void;
 }
 
-export const useAuthStore = create<AuthState>((set) => ({
+export const useAuthStore = create<AuthState>((set, get) => ({
   user: null,
   accessToken: null,
+  refreshToken: null,
+  isAuthenticated: false,
   isLoading: false,
   isInitializing: true,
   error: null,
@@ -33,13 +42,29 @@ export const useAuthStore = create<AuthState>((set) => ({
   initialize: async () => {
     set({ isInitializing: true });
     try {
-      const [token, cachedUser] = await Promise.all([
+      const [token, storedRefreshToken, cachedUser] = await Promise.all([
         secureStorage.getSecureItem(CONFIG.STORAGE_KEYS.ACCESS_TOKEN),
+        secureStorage.getSecureItem(CONFIG.STORAGE_KEYS.REFRESH_TOKEN),
         secureStorage.getItem<User>(CONFIG.STORAGE_KEYS.USER),
       ]);
 
+      if (storedRefreshToken) {
+        try {
+          const { accessToken, refreshToken } = await authApi.refreshToken(storedRefreshToken);
+          await Promise.all([
+            secureStorage.setSecureItem(CONFIG.STORAGE_KEYS.ACCESS_TOKEN, accessToken),
+            secureStorage.setSecureItem(CONFIG.STORAGE_KEYS.REFRESH_TOKEN, refreshToken),
+          ]);
+          set({ accessToken, refreshToken, user: cachedUser, isAuthenticated: true });
+          return;
+        } catch {
+          await get().logout();
+          return;
+        }
+      }
+
       if (token && cachedUser) {
-        set({ accessToken: token, user: cachedUser });
+        set({ accessToken: token, refreshToken: storedRefreshToken, user: cachedUser, isAuthenticated: true });
       }
     } finally {
       set({ isInitializing: false });
@@ -57,7 +82,7 @@ export const useAuthStore = create<AuthState>((set) => ({
         secureStorage.setItem(CONFIG.STORAGE_KEYS.USER, user),
       ]);
 
-      set({ user, accessToken, isLoading: false });
+      set({ user, accessToken, refreshToken, isAuthenticated: true, isLoading: false });
     } catch (err) {
       set({ isLoading: false, error: 'Invalid email or password.' });
       throw err;
@@ -67,25 +92,19 @@ export const useAuthStore = create<AuthState>((set) => ({
   register: async (payload) => {
     set({ isLoading: true, error: null });
     try {
-      const { user, accessToken, refreshToken } = await authApi.register(payload);
-
-      await Promise.all([
-        secureStorage.setSecureItem(CONFIG.STORAGE_KEYS.ACCESS_TOKEN, accessToken),
-        secureStorage.setSecureItem(CONFIG.STORAGE_KEYS.REFRESH_TOKEN, refreshToken),
-        secureStorage.setItem(CONFIG.STORAGE_KEYS.USER, user),
-      ]);
-
-      set({ user, accessToken, isLoading: false });
+      const result = await authApi.register(payload);
+      set({ isLoading: false });
+      return result;
     } catch (err) {
       set({ isLoading: false, error: 'Could not create account. Try again.' });
       throw err;
     }
   },
 
-  refreshToken: async () => {
+  refreshAccessToken: async () => {
     set({ isLoading: true, error: null });
     try {
-      const storedRefreshToken = await secureStorage.getSecureItem(CONFIG.STORAGE_KEYS.REFRESH_TOKEN);
+      const storedRefreshToken = get().refreshToken || await secureStorage.getSecureItem(CONFIG.STORAGE_KEYS.REFRESH_TOKEN);
       if (!storedRefreshToken) {
         throw new Error('No refresh token available');
       }
@@ -97,21 +116,21 @@ export const useAuthStore = create<AuthState>((set) => ({
         secureStorage.setSecureItem(CONFIG.STORAGE_KEYS.REFRESH_TOKEN, refreshToken),
       ]);
 
-      set({ accessToken, isLoading: false });
+      set({ accessToken, refreshToken, isAuthenticated: true, isLoading: false });
     } catch (err) {
-      await useAuthStore.getState().logout();
+      await get().logout();
       throw err;
     }
   },
 
   logout: async () => {
-    const refreshToken = await secureStorage.getSecureItem(
-      CONFIG.STORAGE_KEYS.REFRESH_TOKEN
-    );
+    const storeRefreshToken = get().refreshToken;
+    const storageRefreshToken = await secureStorage.getSecureItem(CONFIG.STORAGE_KEYS.REFRESH_TOKEN);
+    const tokenToInvalidate = storeRefreshToken || storageRefreshToken;
 
     try {
-      if (refreshToken) {
-        await authApi.logout(refreshToken);
+      if (tokenToInvalidate) {
+        await authApi.logout(tokenToInvalidate);
       }
     } catch {
       // ignore network errors on logout
@@ -125,7 +144,7 @@ export const useAuthStore = create<AuthState>((set) => ({
       secureStorage.removeItem(CONFIG.STORAGE_KEYS.USER),
     ]);
 
-    set({ user: null, accessToken: null });
+    set({ user: null, accessToken: null, refreshToken: null, isAuthenticated: false });
   },
 
   setUser: (user) => {
