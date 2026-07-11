@@ -22,7 +22,7 @@ interface AuthState {
   error: string | null;
 
   initialize: () => Promise<void>;
-  login: (payload: { email: string; password: string }) => Promise<void>;
+  login: (payload: { email: string; password: string; role?: UserRole }) => Promise<void>;
   register: (payload: { name: string; email: string; password: string; role: UserRole; phone?: string }) => Promise<RegisterResult>;
   refreshAccessToken: () => Promise<void>;
   logout: () => Promise<void>;
@@ -71,10 +71,14 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     }
   },
 
-  login: async (payload) => {
+  login: async (payload: { email: string; password: string; role?: UserRole }) => {
     set({ isLoading: true, error: null });
     try {
       const { user, accessToken, refreshToken } = await authApi.login(payload);
+
+      if (payload.role && user.role !== payload.role) {
+        throw { statusCode: 401, message: `This account is registered as a ${user.role}, not a ${payload.role}. Please sign in with the correct role.` };
+      }
 
       await Promise.all([
         secureStorage.setSecureItem(CONFIG.STORAGE_KEYS.ACCESS_TOKEN, accessToken),

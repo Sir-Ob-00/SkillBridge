@@ -60,7 +60,7 @@ export const ScreenWrapper: React.FC<ScreenWrapperProps> = ({
       {keyboardAvoiding ? (
         <KeyboardAvoidingView
           className="flex-1"
-          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         >
           {content}
         </KeyboardAvoidingView>

@@ -5,6 +5,7 @@ import { ApiResponse, AuthResponse, UserRole } from '@app-types/index';
 export interface LoginPayload {
   email: string;
   password: string;
+  role?: UserRole;
 }
 
 export interface RegisterPayload {

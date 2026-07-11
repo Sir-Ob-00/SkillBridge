@@ -38,7 +38,7 @@ export const LoginScreen: React.FC<Props> = ({ navigation, route }) => {
     }
 
     try {
-      await login({ email: normalizeEmail(email), password });
+      await login({ email: normalizeEmail(email), password, role });
       feedbackStore.show({
         type: 'success',
         title: 'Login Successful',
@@ -72,7 +72,6 @@ export const LoginScreen: React.FC<Props> = ({ navigation, route }) => {
       <Input
         label="Email"
         placeholder="you@university.edu"
-        helperText="Enter a valid email address"
         autoCapitalize="none"
         keyboardType="email-address"
         value={email}

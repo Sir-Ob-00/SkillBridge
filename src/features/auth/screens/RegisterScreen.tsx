@@ -105,7 +105,6 @@ export const RegisterScreen: React.FC<Props> = ({ navigation, route }) => {
         <Input
           label="Email"
           placeholder="you@university.edu"
-          helperText="Enter a valid email address"
           autoCapitalize="none"
           keyboardType="email-address"
           value={email}

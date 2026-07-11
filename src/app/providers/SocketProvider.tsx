@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { socketClient } from '@services/socket/socketClient';
 import { useAuthStore, selectIsAuthenticated } from '@store/auth.store';
 import { useBookingSocket } from '@features/booking/hooks/useBookingSocket';
@@ -16,6 +16,7 @@ interface SocketProviderProps {
  */
 export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
   const isAuthenticated = useAuthStore(selectIsAuthenticated);
+  const wasAuthenticated = useRef(isAuthenticated);
 
   useBookingSocket();
   useChatSocket();
@@ -32,9 +33,11 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
 
     if (isAuthenticated) {
       void socketClient.connect();
-    } else {
+    } else if (wasAuthenticated.current) {
+      // Only disconnect when transitioning from authenticated to unauthenticated
       socketClient.disconnect();
     }
+    wasAuthenticated.current = isAuthenticated;
 
     const socket = socketClient.getSocket();
     let cleanupNotifications: (() => void) | null = null;
