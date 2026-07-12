@@ -18,18 +18,18 @@ export const userService = {
     return data.data;
   },
 
-  uploadAvatar: async (uri: string) => {
+  uploadAvatar: async (uri: string): Promise<string> => {
     const formData = new FormData();
     formData.append('avatar', {
       uri,
       type: 'image/jpeg',
       name: 'upload.jpg',
     } as any);
-    const { data } = await apiClient.post<ApiResponse<User>>(
+    const { data } = await apiClient.post<ApiResponse<{ url: string }>>(
       API_ROUTES.USERS.AVATAR,
       formData,
       { headers: { 'Content-Type': 'multipart/form-data' } }
     );
-    return data.data;
+    return data.data.url;
   },
 };

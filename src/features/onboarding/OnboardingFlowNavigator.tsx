@@ -1,7 +1,8 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
+import { ActivityIndicator, View } from 'react-native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { OnboardingFlowParamList } from './onboarding.types';
-import { OnboardingStatus } from '@app-types/index';
+import { OnboardingFlowParamList, COMPLETED_STEP_ORDER } from './onboarding.types';
+import { OnboardingStepId, OnboardingStatus } from '@app-types/index';
 import { PendingReviewScreen } from './screens/PendingReviewScreen';
 import { UnderReviewScreen } from './screens/UnderReviewScreen';
 import { RejectedScreen } from './screens/RejectedScreen';
@@ -35,20 +36,45 @@ const initialRoute = (status: OnboardingStatus): keyof OnboardingFlowParamList =
 
 export const OnboardingFlowNavigator: React.FC<Props> = ({ onboardingStatus }) => {
   const setCompletedSteps = useOnboardingStore((s) => s.setCompletedSteps);
+  const setCurrentStep = useOnboardingStore((s) => s.setCurrentStep);
+  const loadDraft = useOnboardingStore((s) => s.loadDraft);
+  const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
-    const fetchStatus = async () => {
-      try {
-        const result = await onboardingApi.getOnboardingStatus();
-        setCompletedSteps(result.completedSteps);
-      } catch {
-        // Use empty completed steps as fallback
+    const init = async () => {
+      await loadDraft();
+
+      if (onboardingStatus === 'PENDING_PROFILE' || onboardingStatus === 'CHANGES_REQUESTED') {
+        try {
+          const result = await onboardingApi.getOnboardingStatus();
+          setCompletedSteps(result.completedSteps);
+
+          const nextStep = (() => {
+            for (let i = 0; i < COMPLETED_STEP_ORDER.length; i++) {
+              if (!result.completedSteps.includes(COMPLETED_STEP_ORDER[i])) {
+                return (i + 1) as OnboardingStepId;
+              }
+            }
+            return 9 as OnboardingStepId;
+          })();
+          setCurrentStep(nextStep);
+        } catch {
+          // fallback to step 1
+        }
       }
+
+      setIsReady(true);
     };
-    if (onboardingStatus === 'PENDING_PROFILE' || onboardingStatus === 'CHANGES_REQUESTED') {
-      void fetchStatus();
-    }
-  }, [onboardingStatus, setCompletedSteps]);
+    void init();
+  }, [onboardingStatus, setCompletedSteps, setCurrentStep, loadDraft]);
+
+  if (!isReady) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <ActivityIndicator size="large" />
+      </View>
+    );
+  }
 
   return (
     <Stack.Navigator

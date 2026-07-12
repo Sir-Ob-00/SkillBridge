@@ -12,6 +12,14 @@ import {
 } from '@app-types/index';
 import { Category } from '@constants/categories';
 
+export interface ApiCategory {
+  id: string;
+  name: string;
+  active: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface CategoryWithSkills extends Category {
   skills: Skill[];
 }
@@ -78,6 +86,13 @@ export interface SubmitError {
 export const onboardingApi = {
   getCategoriesWithSkills: async () => {
     const { data } = await apiClient.get<ApiResponse<CategoryWithSkills[]>>(API_ROUTES.CATEGORIES.LIST);
+    return data.data;
+  },
+
+  getCategories: async (activeOnly = true) => {
+    const { data } = await apiClient.get<ApiResponse<ApiCategory[]>>(API_ROUTES.CATEGORIES.LIST, {
+      params: { activeOnly },
+    });
     return data.data;
   },
 

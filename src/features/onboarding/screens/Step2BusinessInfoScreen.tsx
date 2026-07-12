@@ -103,7 +103,7 @@ export const Step2BusinessInfoScreen: React.FC<Props> = ({ navigation }) => {
 
       <Input
         label="Location"
-        placeholder="e.g. Accra, Ghana"
+        placeholder="e.g. Behind Autonomy"
         value={location}
         onChangeText={(val) => { setLocation(val); setErrors((prev) => ({ ...prev, location: '' })); }}
         error={errors.location}

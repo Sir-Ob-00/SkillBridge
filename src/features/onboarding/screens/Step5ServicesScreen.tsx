@@ -8,7 +8,7 @@ import { Input } from '@shared/components';
 import { useOnboardingStore } from '../store/onboarding.store';
 import { colors } from '@shared/ui/colors';
 import { OnboardingServiceItem } from '@app-types/index';
-import { onboardingApi, CategoryWithSkills } from '../services/onboarding.api';
+import { onboardingApi, ApiCategory } from '../services/onboarding.api';
 import { useFeedbackStore } from '@store/feedback.store';
 
 type Props = NativeStackScreenProps<OnboardingStackParamList, 'OnboardingStep5'>;
@@ -17,7 +17,7 @@ export const Step5ServicesScreen: React.FC<Props> = ({ navigation }) => {
   const { cachedCategoryIds, cachedServices, cacheServices, saveDraft } = useOnboardingStore();
   const feedbackStore = useFeedbackStore();
 
-  const [categories, setCategories] = useState<CategoryWithSkills[]>([]);
+  const [categories, setCategories] = useState<ApiCategory[]>([]);
   const [isLoadingCategories, setIsLoadingCategories] = useState(true);
 
   const [items, setItems] = useState<OnboardingServiceItem[]>(
@@ -35,7 +35,7 @@ export const Step5ServicesScreen: React.FC<Props> = ({ navigation }) => {
   const loadCategories = async () => {
     setIsLoadingCategories(true);
     try {
-      const data = await onboardingApi.getCategoriesWithSkills();
+      const data = await onboardingApi.getCategories();
       setCategories(data);
     } catch {
       feedbackStore.show({ type: 'error', title: 'Error', message: 'Could not load categories.' });
@@ -155,7 +155,7 @@ export const Step5ServicesScreen: React.FC<Props> = ({ navigation }) => {
                       onPress={() => { updateItem(index, 'categoryId', cat.id); setErrors((prev) => ({ ...prev, [`categoryId_${index}`]: '' })); }}
                       className={`rounded-full px-3 py-1.5 ${isSelected ? 'bg-primary' : 'border border-gray-200 bg-white'}`}
                     >
-                      <Text className={`text-xs ${isSelected ? 'font-bold text-white' : 'text-gray-600'}`}>{cat.label}</Text>
+                      <Text className={`text-xs ${isSelected ? 'font-bold text-white' : 'text-gray-600'}`}>{cat.name}</Text>
                     </Pressable>
                   );
                 })}

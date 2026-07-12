@@ -5,13 +5,16 @@ export interface Category {
 }
 
 export const CATEGORIES: Category[] = [
-  { id: 'graphic_design', label: 'Graphic Design', icon: 'pen-tool' },
-  { id: 'photography', label: 'Photography', icon: 'camera' },
-  { id: 'barbering', label: 'Barbering', icon: 'scissors' },
-  { id: 'makeup', label: 'Makeup', icon: 'palette' },
-  { id: 'tailoring', label: 'Tailoring', icon: 'shirt' },
-  { id: 'laptop_repair', label: 'Laptop Repair', icon: 'monitor' },
-  { id: 'phone_repair', label: 'Phone Repair', icon: 'smartphone' },
-  { id: 'tutoring', label: 'Tutoring', icon: 'book-open' },
-  { id: 'event_decoration', label: 'Event Decoration', icon: 'sparkles' },
+  { id: 'electrician', label: 'Electrician', icon: 'zap' },
+  { id: 'plumber', label: 'Plumber', icon: 'droplets' },
+  { id: 'carpenter', label: 'Carpenter', icon: 'ruler' },
+  { id: 'painter', label: 'Painter', icon: 'paintbrush' },
+  { id: 'welder', label: 'Welder', icon: 'wrench' },
+  { id: 'mason', label: 'Mason', icon: 'hard-hat' },
+  { id: 'tailor', label: 'Tailor / Fashion Designer', icon: 'shirt' },
+  { id: 'barber', label: 'Hair Stylist / Barber', icon: 'scissors' },
+  { id: 'makeup_artist', label: 'Makeup Artist', icon: 'palette' },
+  { id: 'ac_refrigeration', label: 'AC & Refrigeration Technician', icon: 'snowflake' },
+  { id: 'phone_computer_tech', label: 'Phone / Computer Technician', icon: 'smartphone' },
+  { id: 'auto_mechanic', label: 'Auto Mechanic', icon: 'car' },
 ];

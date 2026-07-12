@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Alert, Image, Pressable, Text, View } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { Camera, Phone } from 'lucide-react-native';
@@ -9,7 +9,7 @@ import { Input } from '@shared/components';
 import { useOnboardingStore } from '../store/onboarding.store';
 import { useAuth } from '@hooks/useAuth';
 import { colors } from '@shared/ui/colors';
-import { uploadService } from '@services/upload.service';
+import { userService } from '@services/user.service';
 import { onboardingApi } from '../services/onboarding.api';
 import { useFeedbackStore } from '@store/feedback.store';
 
@@ -30,6 +30,28 @@ export const Step1PersonalInfoScreen: React.FC<Props> = ({ navigation }) => {
   const [phone, setPhone] = useState(cachedPhone || user?.phone || '');
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSaving, setIsSaving] = useState(false);
+
+  useEffect(() => {
+    const hydrate = async () => {
+      try {
+        const serverUser = await userService.getMe();
+        if (!serverUser) return;
+
+        const serverPhone = serverUser.phone || '';
+        const serverAvatar = (serverUser as any).profileImageUrl || serverUser.avatarUrl;
+
+        if (!cachedPhone && serverPhone) {
+          setPhone(serverPhone);
+          cachePersonalInfo(serverPhone, serverAvatar || undefined);
+        } else if (serverAvatar && !cachedProfileImageUrl) {
+          cachePersonalInfo(cachedPhone || serverPhone, serverAvatar);
+        }
+      } catch {
+        // keep local state as fallback
+      }
+    };
+    void hydrate();
+  }, []);
 
   const handlePickImage = async () => {
     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -65,7 +87,7 @@ export const Step1PersonalInfoScreen: React.FC<Props> = ({ navigation }) => {
     try {
       let profileImageUrl = cachedProfileImageUrl || undefined;
       if (localProfileImageUri && !profileImageUrl) {
-        profileImageUrl = await uploadService.uploadImage(localProfileImageUri, 'skillbridge/profile');
+        profileImageUrl = await userService.uploadAvatar(localProfileImageUri);
       }
 
       const payload: { phone: string; profileImageUrl?: string } = { phone: phone.trim() };
@@ -86,7 +108,7 @@ export const Step1PersonalInfoScreen: React.FC<Props> = ({ navigation }) => {
   };
 
   const handleSaveDraft = async () => {
-    cachePersonalInfo(phone.trim());
+    cachePersonalInfo(phone.trim(), cachedProfileImageUrl || undefined);
     await saveDraft();
     Alert.alert('Draft saved', 'Your progress has been saved.');
   };
@@ -103,9 +125,9 @@ export const Step1PersonalInfoScreen: React.FC<Props> = ({ navigation }) => {
 
       <Pressable onPress={handlePickImage} className="mb-6 items-center self-center">
         <View className="relative">
-          {localProfileImageUri ? (
+          {localProfileImageUri || cachedProfileImageUrl ? (
             <Image
-              source={{ uri: localProfileImageUri }}
+              source={{ uri: localProfileImageUri || cachedProfileImageUrl! }}
               className="h-24 w-24 rounded-full bg-gray-200"
               resizeMode="cover"
             />

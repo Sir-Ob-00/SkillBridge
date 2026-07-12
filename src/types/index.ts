@@ -166,6 +166,20 @@ export interface OnboardingDraft {
   currentStep: OnboardingStepId;
   application: Record<string, unknown>;
   updatedAt: string;
+  cachedPhone?: string;
+  cachedProfileImageUrl?: string | null;
+  cachedBusinessName?: string;
+  cachedBio?: string;
+  cachedLocation?: string;
+  cachedPricingFrom?: number;
+  cachedCategoryIds?: string[];
+  cachedSkillIds?: string[];
+  cachedServices?: OnboardingServiceItem[];
+  cachedSlots?: AvailabilitySlot[];
+  cachedPortfolioItems?: PortfolioItemData[];
+  cachedInstitution?: string;
+  cachedStudentId?: string;
+  cachedVerificationImageUrl?: string | null;
 }
 
 export type OnboardingStepId = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;

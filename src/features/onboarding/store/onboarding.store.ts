@@ -154,6 +154,20 @@ export const useOnboardingStore = create<OnboardingState>((set, get) => ({
         set({
           currentStep: draft.currentStep,
           payload: draft.application,
+          cachedPhone: draft.cachedPhone ?? '',
+          cachedProfileImageUrl: draft.cachedProfileImageUrl ?? null,
+          cachedBusinessName: draft.cachedBusinessName ?? '',
+          cachedBio: draft.cachedBio ?? '',
+          cachedLocation: draft.cachedLocation ?? '',
+          cachedPricingFrom: draft.cachedPricingFrom ?? 0,
+          cachedCategoryIds: draft.cachedCategoryIds ?? [],
+          cachedSkillIds: draft.cachedSkillIds ?? [],
+          cachedServices: draft.cachedServices ?? [],
+          cachedSlots: draft.cachedSlots ?? [],
+          cachedPortfolioItems: draft.cachedPortfolioItems ?? [],
+          cachedInstitution: draft.cachedInstitution ?? '',
+          cachedStudentId: draft.cachedStudentId ?? '',
+          cachedVerificationImageUrl: draft.cachedVerificationImageUrl ?? null,
         });
       }
     } catch {
@@ -164,11 +178,32 @@ export const useOnboardingStore = create<OnboardingState>((set, get) => ({
   },
 
   saveDraft: async () => {
-    const { currentStep, payload } = get();
+    const {
+      currentStep, payload,
+      cachedPhone, cachedProfileImageUrl,
+      cachedBusinessName, cachedBio, cachedLocation, cachedPricingFrom,
+      cachedCategoryIds, cachedSkillIds, cachedServices,
+      cachedSlots, cachedPortfolioItems,
+      cachedInstitution, cachedStudentId, cachedVerificationImageUrl,
+    } = get();
     const draft: OnboardingDraft = {
       currentStep,
       application: payload,
       updatedAt: new Date().toISOString(),
+      cachedPhone,
+      cachedProfileImageUrl,
+      cachedBusinessName,
+      cachedBio,
+      cachedLocation,
+      cachedPricingFrom,
+      cachedCategoryIds,
+      cachedSkillIds,
+      cachedServices,
+      cachedSlots,
+      cachedPortfolioItems,
+      cachedInstitution,
+      cachedStudentId,
+      cachedVerificationImageUrl,
     };
     await secureStorage.setItem(ONBOARDING_DRAFT_KEY, draft);
   },

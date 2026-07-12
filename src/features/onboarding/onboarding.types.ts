@@ -9,8 +9,8 @@ export interface OnboardingStep {
 export const ONBOARDING_STEPS: OnboardingStep[] = [
   { id: 1, label: 'Personal', description: 'Personal Information' },
   { id: 2, label: 'Business', description: 'Business Information' },
-  { id: 3, label: 'Skills', description: 'Skills' },
-  { id: 4, label: 'Categories', description: 'Categories' },
+  { id: 3, label: 'Category', description: 'Category' },
+  { id: 4, label: 'Skill', description: 'Skill' },
   { id: 5, label: 'Services', description: 'Services & Pricing' },
   { id: 6, label: 'Availability', description: 'Availability' },
   { id: 7, label: 'Portfolio', description: 'Portfolio' },

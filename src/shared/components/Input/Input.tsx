@@ -27,12 +27,12 @@ export const Input: React.FC<InputProps> = ({
   return (
     <View className="mb-4 w-full">
       {label ? (
-        <Text className="mb-1.5 text-sm font-medium text-gray-700">
+        <Text className="mb-2 text-sm font-medium text-gray-700">
           {label}
         </Text>
       ) : null}
 
-      <View className="flex-row items-center rounded-2xl border border-transparent bg-gray-50 px-4 h-14">
+      <View className="flex-row items-center rounded-2xl border border-transparent bg-gray-50 px-4 min-h-[56px]">
         {leftIcon ? <View className="mr-2">{leftIcon}</View> : null}
 
         <TextInput
