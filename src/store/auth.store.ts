@@ -3,6 +3,7 @@ import { User, UserRole } from '@app-types/index';
 import { CONFIG } from '@constants/config';
 import { secureStorage } from '@services/storage/secureStorage';
 import { authApi } from '@features/auth/services/auth.api';
+import { useOnboardingStore } from '@features/onboarding/store/onboarding.store';
 import { socketClient } from '@services/socket/socketClient';
 import { setLogoutHandler as setAuthLogoutHandler } from '@features/auth/services/client';
 import { setLogoutHandler as setApiLogoutHandler } from '@services/api/client';
@@ -141,6 +142,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     }
 
     socketClient.disconnect();
+
+    await useOnboardingStore.getState().clearDraft();
 
     await Promise.all([
       secureStorage.removeSecureItem(CONFIG.STORAGE_KEYS.ACCESS_TOKEN),

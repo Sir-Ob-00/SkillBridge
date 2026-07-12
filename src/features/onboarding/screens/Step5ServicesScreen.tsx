@@ -86,6 +86,8 @@ export const Step5ServicesScreen: React.FC<Props> = ({ navigation }) => {
       }));
       await onboardingApi.patchServices({ items: payload });
       cacheServices(payload);
+      useOnboardingStore.getState().completeStep('services');
+      await saveDraft();
       navigation.navigate('OnboardingStep6');
     } catch (err) {
       feedbackStore.show({ type: 'error', title: 'Error', message: 'Could not save services. Please try again.' });

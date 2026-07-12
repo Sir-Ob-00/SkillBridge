@@ -19,29 +19,76 @@ class SocketClient {
       return this.socket;
     }
 
+    this.cleanup();
+
     const token = await secureStorage.getSecureItem(
       CONFIG.STORAGE_KEYS.ACCESS_TOKEN
     );
 
+    if (!token) {
+      logger.warn('[SocketClient] No access token available, skipping connection');
+      throw new Error('No access token available');
+    }
+
     this.socket = io(CONFIG.SOCKET_URL, {
-      transports: ['websocket'],
-      autoConnect: true,
+      path: '/socket.io/',
+      transports: ['polling', 'websocket'],
       auth: { token },
       reconnection: true,
       reconnectionAttempts: 5,
       reconnectionDelay: 1000,
+      timeout: 20000,
+      autoConnect: false,
     });
 
+    this.registerListeners();
+    this.socket.connect();
+
+    return this.socket;
+  }
+
+  async reconnect(): Promise<Socket> {
+    this.cleanup();
+
+    const token = await secureStorage.getSecureItem(
+      CONFIG.STORAGE_KEYS.ACCESS_TOKEN
+    );
+
+    if (!token) {
+      logger.warn('[SocketClient] No access token available for reconnect');
+      throw new Error('No access token available');
+    }
+
+    this.socket = io(CONFIG.SOCKET_URL, {
+      path: '/socket.io/',
+      transports: ['polling', 'websocket'],
+      auth: { token },
+      reconnection: true,
+      reconnectionAttempts: 5,
+      reconnectionDelay: 1000,
+      timeout: 20000,
+      autoConnect: false,
+    });
+
+    this.registerListeners();
+    this.socket.connect();
+
+    return this.socket;
+  }
+
+  private registerListeners(): void {
+    if (!this.socket) return;
+
     this.socket.on(SOCKET_EVENTS.CONNECT, () => {
-      logger.info('Socket connected', this.socket?.id);
+      console.log('[SocketClient] connected', this.socket?.id);
     });
 
     this.socket.on(SOCKET_EVENTS.DISCONNECT, (reason) => {
-      logger.info('Socket disconnected', reason);
+      console.log('[SocketClient] disconnected', reason);
     });
 
     this.socket.on(SOCKET_EVENTS.CONNECT_ERROR, async (err) => {
-      logger.info('Socket connect error', err.message);
+      console.log('[SocketClient] connect_error', err.message);
 
       const message = err.message?.toLowerCase() ?? '';
       const isAuthError =
@@ -56,11 +103,13 @@ class SocketClient {
         await this.onAuthError();
       }
     });
-
-    return this.socket;
   }
 
   disconnect(): void {
+    this.cleanup();
+  }
+
+  private cleanup(): void {
     if (this.socket) {
       this.socket.removeAllListeners();
       this.socket.disconnect();

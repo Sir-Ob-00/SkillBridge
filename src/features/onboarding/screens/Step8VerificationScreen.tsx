@@ -62,6 +62,8 @@ export const Step8VerificationScreen: React.FC<Props> = ({ navigation }) => {
       const payload = { institution: institution.trim(), studentId: studentId.trim(), verificationImageUrl };
       await onboardingApi.patchVerification(payload);
       cacheVerification(payload.institution, payload.studentId, payload.verificationImageUrl);
+      useOnboardingStore.getState().completeStep('verification');
+      await saveDraft();
       navigation.navigate('OnboardingStep9');
     } catch (err) {
       feedbackStore.show({ type: 'error', title: 'Error', message: 'Could not save verification info. Please try again.' });

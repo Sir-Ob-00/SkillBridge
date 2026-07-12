@@ -75,6 +75,25 @@ export interface SubmitPayload {
   notes?: string;
 }
 
+export interface DraftData {
+  currentStep: number;
+  completedSteps: string[];
+  phone?: string | null;
+  profileImageUrl?: string | null;
+  businessName?: string;
+  bio?: string | null;
+  location?: string | null;
+  pricingFrom?: number | null;
+  categoryIds?: string[];
+  skillIds?: string[];
+  services?: OnboardingServiceItem[];
+  slots?: AvailabilitySlot[];
+  portfolioItems?: PortfolioItemData[];
+  institution?: string;
+  studentId?: string;
+  verificationImageUrl?: string | null;
+}
+
 export interface SubmitError {
   success: false;
   message: string;
@@ -218,6 +237,20 @@ export const onboardingApi = {
       API_ROUTES.ONBOARDING.HISTORY
     );
     return data.data;
+  },
+
+  getDraft: async () => {
+    const { data } = await apiClient.get<ApiResponse<DraftData | null>>(
+      API_ROUTES.ONBOARDING.DRAFT
+    );
+    return data.data;
+  },
+
+  putDraft: async (payload: DraftData) => {
+    await apiClient.put<ApiResponse<null>>(
+      API_ROUTES.ONBOARDING.DRAFT,
+      payload
+    );
   },
 
   submitApplication: async (payload?: SubmitPayload) => {

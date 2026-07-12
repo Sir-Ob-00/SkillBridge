@@ -5,3 +5,4 @@ export * from './Avatar';
 export * from './Loader';
 export * from './EmptyState';
 export * from './FeedbackModal';
+export * from './PasswordStrengthIndicator';

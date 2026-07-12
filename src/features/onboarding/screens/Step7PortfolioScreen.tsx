@@ -74,6 +74,8 @@ export const Step7PortfolioScreen: React.FC<Props> = ({ navigation }) => {
       await onboardingApi.patchPortfolio({ items });
       clearPortfolioItems();
       items.forEach((item) => cachePortfolioItem(item));
+      useOnboardingStore.getState().completeStep('portfolio');
+      await saveDraft();
       navigation.navigate('OnboardingStep8');
     } catch (err) {
       feedbackStore.show({ type: 'error', title: 'Upload Error', message: 'Could not upload portfolio images. Please try again.' });

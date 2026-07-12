@@ -7,9 +7,14 @@ import {
   PortfolioItemData,
 } from '@app-types/index';
 import { secureStorage } from '@services/storage/secureStorage';
+import { useAuthStore } from '@store/auth.store';
 import { COMPLETED_STEP_ORDER, STEP_TO_COMPLETED_KEY } from '../onboarding.types';
+import { onboardingApi, DraftData } from '../services/onboarding.api';
 
-const ONBOARDING_DRAFT_KEY = 'skillbridge.onboardingDraft';
+const getDraftKey = (): string => {
+  const user = useAuthStore.getState().user;
+  return `skillbridge.onboardingDraft.${user?.id ?? 'anonymous'}`;
+};
 
 interface OnboardingState {
   currentStep: OnboardingStepId;
@@ -58,6 +63,7 @@ interface OnboardingState {
   cacheVerification: (institution: string, studentId: string, verificationImageUrl?: string) => void;
   cachePortfolioItem: (item: PortfolioItemData) => void;
   clearPortfolioItems: () => void;
+  completeStep: (stepKey: string) => void;
 
   loadDraft: () => Promise<void>;
   saveDraft: () => Promise<void>;
@@ -146,29 +152,68 @@ export const useOnboardingStore = create<OnboardingState>((set, get) => ({
 
   clearPortfolioItems: () => set({ cachedPortfolioItems: [] }),
 
+  completeStep: (stepKey) =>
+    set((state) => ({
+      completedSteps: state.completedSteps.includes(stepKey)
+        ? state.completedSteps
+        : [...state.completedSteps, stepKey],
+    })),
+
   loadDraft: async () => {
     set({ isLoading: true });
     try {
-      const draft = await secureStorage.getItem<OnboardingDraft>(ONBOARDING_DRAFT_KEY);
-      if (draft) {
-        set({
-          currentStep: draft.currentStep,
-          payload: draft.application,
-          cachedPhone: draft.cachedPhone ?? '',
-          cachedProfileImageUrl: draft.cachedProfileImageUrl ?? null,
-          cachedBusinessName: draft.cachedBusinessName ?? '',
-          cachedBio: draft.cachedBio ?? '',
-          cachedLocation: draft.cachedLocation ?? '',
-          cachedPricingFrom: draft.cachedPricingFrom ?? 0,
-          cachedCategoryIds: draft.cachedCategoryIds ?? [],
-          cachedSkillIds: draft.cachedSkillIds ?? [],
-          cachedServices: draft.cachedServices ?? [],
-          cachedSlots: draft.cachedSlots ?? [],
-          cachedPortfolioItems: draft.cachedPortfolioItems ?? [],
-          cachedInstitution: draft.cachedInstitution ?? '',
-          cachedStudentId: draft.cachedStudentId ?? '',
-          cachedVerificationImageUrl: draft.cachedVerificationImageUrl ?? null,
-        });
+      let loaded = false;
+
+      // 1. Server is canonical source
+      try {
+        const serverDraft = await onboardingApi.getDraft();
+        if (serverDraft) {
+          set({
+            currentStep: serverDraft.currentStep as OnboardingStepId,
+            cachedPhone: serverDraft.phone ?? '',
+            cachedProfileImageUrl: serverDraft.profileImageUrl ?? null,
+            cachedBusinessName: serverDraft.businessName ?? '',
+            cachedBio: serverDraft.bio ?? '',
+            cachedLocation: serverDraft.location ?? '',
+            cachedPricingFrom: serverDraft.pricingFrom ?? 0,
+            cachedCategoryIds: serverDraft.categoryIds ?? [],
+            cachedSkillIds: serverDraft.skillIds ?? [],
+            cachedServices: serverDraft.services ?? [],
+            cachedSlots: serverDraft.slots ?? [],
+            cachedPortfolioItems: serverDraft.portfolioItems ?? [],
+            cachedInstitution: serverDraft.institution ?? '',
+            cachedStudentId: serverDraft.studentId ?? '',
+            cachedVerificationImageUrl: serverDraft.verificationImageUrl ?? null,
+          });
+          loaded = true;
+        }
+      } catch {
+        // Server unavailable — fall through to AsyncStorage
+      }
+
+      // 2. Fallback: AsyncStorage
+      if (!loaded) {
+        const localDraft = await secureStorage.getItem<OnboardingDraft>(getDraftKey());
+        if (localDraft) {
+          set({
+            currentStep: localDraft.currentStep,
+            payload: localDraft.application,
+            cachedPhone: localDraft.cachedPhone ?? '',
+            cachedProfileImageUrl: localDraft.cachedProfileImageUrl ?? null,
+            cachedBusinessName: localDraft.cachedBusinessName ?? '',
+            cachedBio: localDraft.cachedBio ?? '',
+            cachedLocation: localDraft.cachedLocation ?? '',
+            cachedPricingFrom: localDraft.cachedPricingFrom ?? 0,
+            cachedCategoryIds: localDraft.cachedCategoryIds ?? [],
+            cachedSkillIds: localDraft.cachedSkillIds ?? [],
+            cachedServices: localDraft.cachedServices ?? [],
+            cachedSlots: localDraft.cachedSlots ?? [],
+            cachedPortfolioItems: localDraft.cachedPortfolioItems ?? [],
+            cachedInstitution: localDraft.cachedInstitution ?? '',
+            cachedStudentId: localDraft.cachedStudentId ?? '',
+            cachedVerificationImageUrl: localDraft.cachedVerificationImageUrl ?? null,
+          });
+        }
       }
     } catch {
       // ignore
@@ -179,14 +224,42 @@ export const useOnboardingStore = create<OnboardingState>((set, get) => ({
 
   saveDraft: async () => {
     const {
-      currentStep, payload,
+      currentStep, payload, completedSteps,
       cachedPhone, cachedProfileImageUrl,
       cachedBusinessName, cachedBio, cachedLocation, cachedPricingFrom,
       cachedCategoryIds, cachedSkillIds, cachedServices,
       cachedSlots, cachedPortfolioItems,
       cachedInstitution, cachedStudentId, cachedVerificationImageUrl,
     } = get();
-    const draft: OnboardingDraft = {
+
+    // Server draft (canonical source)
+    const serverDraft: DraftData = {
+      currentStep,
+      completedSteps,
+      phone: cachedPhone || null,
+      profileImageUrl: cachedProfileImageUrl,
+      businessName: cachedBusinessName || undefined,
+      bio: cachedBio || null,
+      location: cachedLocation || null,
+      pricingFrom: cachedPricingFrom || null,
+      categoryIds: cachedCategoryIds,
+      skillIds: cachedSkillIds,
+      services: cachedServices,
+      slots: cachedSlots,
+      portfolioItems: cachedPortfolioItems,
+      institution: cachedInstitution || undefined,
+      studentId: cachedStudentId || undefined,
+      verificationImageUrl: cachedVerificationImageUrl,
+    };
+
+    try {
+      await onboardingApi.putDraft(serverDraft);
+    } catch {
+      // Network error — AsyncStorage is the fallback
+    }
+
+    // Local draft (offline resilience)
+    const localDraft: OnboardingDraft = {
       currentStep,
       application: payload,
       updatedAt: new Date().toISOString(),
@@ -205,11 +278,17 @@ export const useOnboardingStore = create<OnboardingState>((set, get) => ({
       cachedStudentId,
       cachedVerificationImageUrl,
     };
-    await secureStorage.setItem(ONBOARDING_DRAFT_KEY, draft);
+    await secureStorage.setItem(getDraftKey(), localDraft);
   },
 
   clearDraft: async () => {
-    await secureStorage.removeItem(ONBOARDING_DRAFT_KEY);
+    try {
+      await onboardingApi.putDraft({ currentStep: 1, completedSteps: [] });
+    } catch {
+      // Server unavailable — local clear still happens
+    }
+
+    await secureStorage.removeItem(getDraftKey());
     set({
       currentStep: 1,
       payload: {},

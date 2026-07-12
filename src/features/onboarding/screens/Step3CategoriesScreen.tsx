@@ -50,6 +50,8 @@ export const Step3CategoriesScreen: React.FC<Props> = ({ navigation }) => {
     try {
       await onboardingApi.patchCategories({ categoryIds: [selectedId] });
       cacheCategoryIds([selectedId]);
+      useOnboardingStore.getState().completeStep('skills');
+      await saveDraft();
       navigation.navigate('OnboardingStep4');
     } catch (err) {
       feedbackStore.show({ type: 'error', title: 'Error', message: 'Could not save category. Please try again.' });

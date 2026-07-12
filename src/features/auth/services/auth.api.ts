@@ -21,6 +21,20 @@ export interface RefreshResponse {
   refreshToken: string;
 }
 
+export interface PasswordStrengthChecks {
+  length: boolean;
+  lowercase: boolean;
+  uppercase: boolean;
+  digit: boolean;
+  symbol: boolean;
+}
+
+export interface PasswordStrengthResponse {
+  score: number;
+  strength: 'weak' | 'medium' | 'strong';
+  checks: PasswordStrengthChecks;
+}
+
 export const authApi = {
   login: async (payload: LoginPayload) => {
     const { data } = await apiClient.post<ApiResponse<AuthResponse>>(
@@ -66,6 +80,14 @@ export const authApi = {
     const { data } = await apiClient.post<ApiResponse<null>>(
       API_ROUTES.AUTH.LOGOUT,
       { refreshToken }
+    );
+    return data.data;
+  },
+
+  checkPasswordStrength: async (password: string) => {
+    const { data } = await apiClient.post<ApiResponse<PasswordStrengthResponse>>(
+      API_ROUTES.AUTH.PASSWORD_STRENGTH,
+      { password }
     );
     return data.data;
   },

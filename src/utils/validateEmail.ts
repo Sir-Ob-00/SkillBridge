@@ -12,5 +12,5 @@ export const validatePassword = (password: string): boolean => {
 };
 
 export const validatePhone = (phone: string): boolean => {
-  return /^[+]?[\d\s-]{7,15}$/.test(phone.trim());
+  return /^\d{10}$/.test(phone.trim());
 };

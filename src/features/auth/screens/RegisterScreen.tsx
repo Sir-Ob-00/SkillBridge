@@ -1,13 +1,15 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Text, View, Pressable } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Mail, Lock, User as UserIcon, Phone, UserPlus } from 'lucide-react-native';
 import { AuthStackParamList } from '../auth.types';
 import { ScreenWrapper } from '@shared/layout';
-import { Button, Input } from '@shared/components';
+import { Button, Input, PasswordStrengthIndicator } from '@shared/components';
 import { colors } from '@shared/ui/colors';
 import { useAuth } from '@hooks/useAuth';
+import { useDebounce } from '@hooks/useDebounce';
 import { useFeedbackStore } from '@store/feedback.store';
+import { authApi } from '../services/auth.api';
 import { normalizeEmail, validateEmail, validatePassword, validatePhone } from '@utils/validateEmail';
 import { handleAuthError } from '@utils/handleAuthError';
 import { ROLE_LABELS } from '@constants/roles';
@@ -27,6 +29,19 @@ export const RegisterScreen: React.FC<Props> = ({ navigation, route }) => {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  const [passwordStrength, setPasswordStrength] = useState<'weak' | 'medium' | 'strong' | null>(null);
+
+  const debouncedPassword = useDebounce(password, 500);
+
+  useEffect(() => {
+    if (!debouncedPassword) {
+      setPasswordStrength(null);
+      return;
+    }
+    authApi.checkPasswordStrength(debouncedPassword)
+      .then((res) => setPasswordStrength(res.strength))
+      .catch(() => setPasswordStrength(null));
+  }, [debouncedPassword]);
 
   const isFormValid = useMemo(() => {
     if (name.trim().length < 2) return false;
@@ -115,12 +130,13 @@ export const RegisterScreen: React.FC<Props> = ({ navigation, route }) => {
       {isArtisan && (
         <Input
           label="Phone"
-          placeholder="0XX XXX XXXX"
+          placeholder="024XXXXXXX"
           keyboardType="phone-pad"
           value={phone}
           onChangeText={setPhone}
           error={fieldErrors.phone}
           leftIcon={<Phone size={18} color={colors.gray400} />}
+          helperText="Enter exactly 10 digits"
         />
       )}
 
@@ -133,6 +149,7 @@ export const RegisterScreen: React.FC<Props> = ({ navigation, route }) => {
         error={fieldErrors.password}
         leftIcon={<Lock size={18} color={colors.gray400} />}
       />
+      <PasswordStrengthIndicator strength={passwordStrength} />
 
       <Input
         label="Confirm Password"

@@ -12,6 +12,7 @@ import { colors } from '@shared/ui/colors';
 import { userService } from '@services/user.service';
 import { onboardingApi } from '../services/onboarding.api';
 import { useFeedbackStore } from '@store/feedback.store';
+import { validatePhone } from '@utils/validateEmail';
 
 type Props = NativeStackScreenProps<OnboardingStackParamList, 'OnboardingStep1'>;
 
@@ -75,8 +76,7 @@ export const Step1PersonalInfoScreen: React.FC<Props> = ({ navigation }) => {
     const errs: Record<string, string> = {};
     const trimmed = phone.trim();
     if (!trimmed) errs.phone = 'Phone number is required.';
-    else if (trimmed.length < 7) errs.phone = 'Phone number must be at least 7 characters.';
-    else if (trimmed.length > 20) errs.phone = 'Phone number must be at most 20 characters.';
+    else if (!validatePhone(trimmed)) errs.phone = 'Phone must be exactly 10 digits.';
     setErrors(errs);
     return Object.keys(errs).length === 0;
   };
@@ -95,6 +95,8 @@ export const Step1PersonalInfoScreen: React.FC<Props> = ({ navigation }) => {
 
       await onboardingApi.patchPersonalInfo(payload);
       cachePersonalInfo(payload.phone, payload.profileImageUrl);
+      useOnboardingStore.getState().completeStep('personal');
+      await saveDraft();
       navigation.navigate('OnboardingStep2');
     } catch (err) {
       feedbackStore.show({
@@ -118,7 +120,7 @@ export const Step1PersonalInfoScreen: React.FC<Props> = ({ navigation }) => {
       currentStep={1}
       onNext={handleNext}
       onSaveDraft={handleSaveDraft}
-      disableNext={!phone.trim() || phone.trim().length < 7 || phone.trim().length > 20}
+      disableNext={!validatePhone(phone.trim())}
       isNextLoading={isSaving}
     >
       <Text className="mb-4 font-heading text-xl font-bold text-gray-900">Personal Information</Text>
@@ -145,7 +147,7 @@ export const Step1PersonalInfoScreen: React.FC<Props> = ({ navigation }) => {
 
       <Input
         label="Phone Number"
-        placeholder="0XX XXX XXXX"
+        placeholder="024XXXXXXX"
         keyboardType="phone-pad"
         value={phone}
         onChangeText={(val) => {
@@ -154,6 +156,7 @@ export const Step1PersonalInfoScreen: React.FC<Props> = ({ navigation }) => {
         }}
         error={errors.phone}
         leftIcon={<Phone size={18} color={colors.gray400} />}
+        helperText="Enter exactly 10 digits"
       />
 
       <Text className="mt-4 text-sm text-gray-500">

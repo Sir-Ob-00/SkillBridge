@@ -42,22 +42,31 @@ export const OnboardingFlowNavigator: React.FC<Props> = ({ onboardingStatus }) =
 
   useEffect(() => {
     const init = async () => {
-      await loadDraft();
-
       if (onboardingStatus === 'PENDING_PROFILE' || onboardingStatus === 'CHANGES_REQUESTED') {
         try {
           const result = await onboardingApi.getOnboardingStatus();
           setCompletedSteps(result.completedSteps);
 
-          const nextStep = (() => {
-            for (let i = 0; i < COMPLETED_STEP_ORDER.length; i++) {
-              if (!result.completedSteps.includes(COMPLETED_STEP_ORDER[i])) {
-                return (i + 1) as OnboardingStepId;
+          let hasLocalData = false;
+          if (result.completedSteps.length > 0) {
+            await loadDraft();
+            const state = useOnboardingStore.getState();
+            hasLocalData = state.cachedPhone !== '' || state.cachedBusinessName !== '';
+          }
+
+          if (hasLocalData) {
+            const nextStep = (() => {
+              for (let i = 0; i < COMPLETED_STEP_ORDER.length; i++) {
+                if (!result.completedSteps.includes(COMPLETED_STEP_ORDER[i])) {
+                  return (i + 1) as OnboardingStepId;
+                }
               }
-            }
-            return 9 as OnboardingStepId;
-          })();
-          setCurrentStep(nextStep);
+              return 9 as OnboardingStepId;
+            })();
+            setCurrentStep(nextStep);
+          } else {
+            setCurrentStep(1);
+          }
         } catch {
           // fallback to step 1
         }

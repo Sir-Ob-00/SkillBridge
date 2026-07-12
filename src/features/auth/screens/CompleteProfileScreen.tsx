@@ -49,7 +49,7 @@ export const CompleteProfileScreen: React.FC = () => {
 
       <Input
         label="Phone number"
-        placeholder="0XX XXX XXXX"
+        placeholder="024XXXXXXX"
         keyboardType="phone-pad"
         value={phone}
         onChangeText={(val) => {
@@ -58,6 +58,7 @@ export const CompleteProfileScreen: React.FC = () => {
         }}
         error={phoneError}
         leftIcon={<Phone size={18} color={colors.gray400} />}
+        helperText="Enter exactly 10 digits"
       />
 
       <Button

@@ -63,6 +63,8 @@ export const Step4SkillsScreen: React.FC<Props> = ({ navigation }) => {
     try {
       await onboardingApi.patchSkills({ skillIds: selectedIds });
       cacheSkillIds(selectedIds);
+      useOnboardingStore.getState().completeStep('categories');
+      await saveDraft();
       navigation.navigate('OnboardingStep5');
     } catch (err) {
       feedbackStore.show({ type: 'error', title: 'Error', message: 'Could not save skills. Please try again.' });

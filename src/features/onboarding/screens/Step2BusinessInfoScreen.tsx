@@ -52,6 +52,8 @@ export const Step2BusinessInfoScreen: React.FC<Props> = ({ navigation }) => {
         (payload.location as string) || '',
         (payload.pricingFrom as number) || 0,
       );
+      useOnboardingStore.getState().completeStep('business');
+      await saveDraft();
       navigation.navigate('OnboardingStep3');
     } catch (err) {
       feedbackStore.show({

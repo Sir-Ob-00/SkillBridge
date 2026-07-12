@@ -53,6 +53,8 @@ export const Step6AvailabilityScreen: React.FC<Props> = ({ navigation }) => {
     try {
       await onboardingApi.patchAvailability({ slots });
       cacheSlots(slots);
+      useOnboardingStore.getState().completeStep('availability');
+      await saveDraft();
       navigation.navigate('OnboardingStep7');
     } catch (err) {
       feedbackStore.show({ type: 'error', title: 'Error', message: 'Could not save availability. Please try again.' });
@@ -106,8 +108,12 @@ export const Step6AvailabilityScreen: React.FC<Props> = ({ navigation }) => {
           </View>
 
           <View className="flex-row gap-2">
-            <Input label="Start" placeholder="09:00" value={slot.startTime} onChangeText={(val) => updateSlot(index, 'startTime', val)} className="flex-1" />
-            <Input label="End" placeholder="17:00" value={slot.endTime} onChangeText={(val) => updateSlot(index, 'endTime', val)} className="flex-1" />
+            <View className="flex-1">
+              <Input label="Start" placeholder="09:00" value={slot.startTime} onChangeText={(val) => updateSlot(index, 'startTime', val)} />
+            </View>
+            <View className="flex-1">
+              <Input label="End" placeholder="17:00" value={slot.endTime} onChangeText={(val) => updateSlot(index, 'endTime', val)} />
+            </View>
           </View>
         </View>
       ))}

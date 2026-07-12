@@ -17,25 +17,32 @@ interface SocketProviderProps {
  */
 export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
   const isAuthenticated = useAuthStore(selectIsAuthenticated);
+  const isInitializing = useAuthStore((state) => state.isInitializing);
+  const accessToken = useAuthStore((state) => state.accessToken);
   const wasAuthenticated = useRef(isAuthenticated);
+  const prevTokenRef = useRef(accessToken);
 
   useBookingSocket();
   useChatSocket();
 
   useEffect(() => {
+    if (isInitializing) return;
+
     socketClient.onAuthErrorHandler(async () => {
       try {
         await useAuthStore.getState().refreshAccessToken();
-        void socketClient.connect();
       } catch {
-        // refreshToken already called logout() on failure
+        // refreshAccessToken already called logout() on failure
       }
     });
 
     if (isAuthenticated) {
-      void socketClient.connect();
+      console.log('[SocketProvider] Authenticated, connecting socket...');
+      void socketClient.connect().catch((err: Error) => {
+        console.log('[SocketProvider] Initial connection failed:', err.message);
+      });
     } else if (wasAuthenticated.current) {
-      // Only disconnect when transitioning from authenticated to unauthenticated
+      console.log('[SocketProvider] Logged out, disconnecting socket...');
       socketClient.disconnect();
     }
     wasAuthenticated.current = isAuthenticated;
@@ -71,7 +78,19 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
       socketClient.disconnect();
       if (cleanupNotifications) cleanupNotifications();
     };
-  }, [isAuthenticated]);
+  }, [isAuthenticated, isInitializing]);
+
+  useEffect(() => {
+    if (!isAuthenticated || isInitializing) return;
+
+    if (prevTokenRef.current && prevTokenRef.current !== accessToken) {
+      console.log('[SocketProvider] Token refreshed, reconnecting socket...');
+      void socketClient.reconnect().catch((err: Error) => {
+        console.log('[SocketProvider] Reconnect failed:', err.message);
+      });
+    }
+    prevTokenRef.current = accessToken;
+  }, [accessToken, isAuthenticated, isInitializing]);
 
   return <>{children}</>;
 };
