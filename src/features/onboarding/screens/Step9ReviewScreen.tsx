@@ -48,10 +48,21 @@ export const Step9ReviewScreen: React.FC<Props> = () => {
         title: 'Application submitted!',
         message: 'Your artisan application has been submitted for review.',
       });
-    } catch (err) {
-      const message = err instanceof Error ? err.message : 'Could not submit application.';
-      setError(message);
-      Alert.alert('Error', message);
+    } catch (err: any) {
+      const apiError = err?.response?.data as { message?: string; details?: { missingFields?: string[] } } | undefined;
+      if (apiError?.details?.missingFields) {
+        const missing = apiError.details.missingFields.join(', ');
+        const message = `Missing required fields: ${missing}`;
+        setError(message);
+        Alert.alert('Incomplete Application', message);
+      } else if (apiError?.message === 'Your application has already been approved.') {
+        setError(apiError.message);
+        Alert.alert('Already Approved', 'Your application has already been approved.');
+      } else {
+        const message = apiError?.message || (err instanceof Error ? err.message : 'Could not submit application.');
+        setError(message);
+        Alert.alert('Error', message);
+      }
     } finally {
       setSubmitting(false);
     }

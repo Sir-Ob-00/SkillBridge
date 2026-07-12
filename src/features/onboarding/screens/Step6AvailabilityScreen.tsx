@@ -11,7 +11,7 @@ import { AvailabilitySlot } from '@app-types/index';
 import { onboardingApi } from '../services/onboarding.api';
 import { useFeedbackStore } from '@store/feedback.store';
 
-const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+const DAYS = ['MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY', 'SUNDAY'];
 
 type Props = NativeStackScreenProps<OnboardingStackParamList, 'OnboardingStep6'>;
 
@@ -23,7 +23,7 @@ export const Step6AvailabilityScreen: React.FC<Props> = ({ navigation }) => {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSaving, setIsSaving] = useState(false);
 
-  const addSlot = () => setSlots((prev) => [...prev, { day: 'Monday', startTime: '09:00', endTime: '17:00' }]);
+  const addSlot = () => setSlots((prev) => [...prev, { day: 'MONDAY', startTime: '09:00', endTime: '17:00' }]);
 
   const updateSlot = (index: number, field: keyof AvailabilitySlot, value: string) => {
     setSlots((prev) => {
@@ -38,6 +38,11 @@ export const Step6AvailabilityScreen: React.FC<Props> = ({ navigation }) => {
   const validate = (): boolean => {
     const errs: Record<string, string> = {};
     if (slots.length === 0) errs.availability = 'Add at least one availability slot.';
+    const timeRegex = /^([01]\d|2[0-3]):([0-5]\d)$/;
+    slots.forEach((slot, i) => {
+      if (!timeRegex.test(slot.startTime)) errs[`start_${i}`] = 'Use HH:mm format (e.g. 09:00).';
+      if (!timeRegex.test(slot.endTime)) errs[`end_${i}`] = 'Use HH:mm format (e.g. 17:00).';
+    });
     setErrors(errs);
     return Object.keys(errs).length === 0;
   };

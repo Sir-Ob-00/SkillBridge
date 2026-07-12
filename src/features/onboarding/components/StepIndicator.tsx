@@ -1,9 +1,10 @@
 import React from 'react';
 import { Text, View } from 'react-native';
-import { Check } from 'lucide-react-native';
+import { Check, Lock } from 'lucide-react-native';
 import { colors } from '@shared/ui/colors';
 import { OnboardingStepId } from '@app-types/index';
-import { ONBOARDING_STEPS } from '../onboarding.types';
+import { ONBOARDING_STEPS, STEP_TO_COMPLETED_KEY, COMPLETED_STEP_ORDER } from '../onboarding.types';
+import { useOnboardingStore } from '../store/onboarding.store';
 
 interface StepIndicatorProps {
   currentStep: OnboardingStepId;
@@ -11,15 +12,31 @@ interface StepIndicatorProps {
 
 export const StepIndicator: React.FC<StepIndicatorProps> = ({ currentStep }) => {
   const displaySteps = ONBOARDING_STEPS;
+  const completedSteps = useOnboardingStore((s) => s.completedSteps);
+
+  const isStepAccessible = (step: OnboardingStepId): boolean => {
+    if (step === 1) return true;
+    const prereqIdx = COMPLETED_STEP_ORDER.indexOf(STEP_TO_COMPLETED_KEY[(step - 1) as OnboardingStepId]);
+    if (prereqIdx === -1) return true;
+    return completedSteps.includes(STEP_TO_COMPLETED_KEY[(step - 1) as OnboardingStepId]);
+  };
+
+  const isStepCompleted = (step: OnboardingStepId): boolean => {
+    if (step <= 1) return false;
+    const key = STEP_TO_COMPLETED_KEY[step];
+    if (!key) return false;
+    return completedSteps.includes(key);
+  };
 
   return (
     <View className="mb-6">
       <View className="flex-row items-center justify-between">
-        {displaySteps.map((step, index) => {
+        {displaySteps.slice(0, 8).map((step, index) => {
           const stepNumber = step.id;
-          const isCompleted = stepNumber < currentStep;
           const isCurrent = stepNumber === currentStep;
-          const isLast = index === displaySteps.length - 1;
+          const isLocked = !isStepAccessible(stepNumber);
+          const isCompleted = isStepCompleted(stepNumber);
+          const isLast = index === 7;
 
           return (
             <React.Fragment key={step.id}>
@@ -30,11 +47,15 @@ export const StepIndicator: React.FC<StepIndicatorProps> = ({ currentStep }) => 
                       ? 'bg-primary'
                       : isCurrent
                         ? 'border-2 border-primary bg-white'
-                        : 'bg-gray-200'
+                        : isLocked
+                          ? 'bg-gray-100'
+                          : 'bg-gray-200'
                   }`}
                 >
                   {isCompleted ? (
                     <Check size={16} color="#ffffff" />
+                  ) : isLocked ? (
+                    <Lock size={14} color={colors.gray400} />
                   ) : (
                     <Text
                       className={`text-xs font-bold ${
@@ -47,7 +68,11 @@ export const StepIndicator: React.FC<StepIndicatorProps> = ({ currentStep }) => 
                 </View>
                 <Text
                   className={`mt-1 text-[10px] ${
-                    isCurrent ? 'font-bold text-primary' : 'text-gray-400'
+                    isCurrent
+                      ? 'font-bold text-primary'
+                      : isLocked
+                        ? 'text-gray-300'
+                        : 'text-gray-400'
                   }`}
                 >
                   {step.label}
@@ -56,7 +81,7 @@ export const StepIndicator: React.FC<StepIndicatorProps> = ({ currentStep }) => 
               {!isLast && (
                 <View
                   className={`mx-1 h-[2px] flex-1 ${
-                    stepNumber < currentStep ? 'bg-primary' : 'bg-gray-200'
+                    isCompleted ? 'bg-primary' : 'bg-gray-200'
                   }`}
                 />
               )}

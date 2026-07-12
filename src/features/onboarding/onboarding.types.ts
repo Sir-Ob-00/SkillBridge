@@ -9,8 +9,8 @@ export interface OnboardingStep {
 export const ONBOARDING_STEPS: OnboardingStep[] = [
   { id: 1, label: 'Personal', description: 'Personal Information' },
   { id: 2, label: 'Business', description: 'Business Information' },
-  { id: 3, label: 'Categories', description: 'Categories' },
-  { id: 4, label: 'Skills', description: 'Skills' },
+  { id: 3, label: 'Skills', description: 'Skills' },
+  { id: 4, label: 'Categories', description: 'Categories' },
   { id: 5, label: 'Services', description: 'Services & Pricing' },
   { id: 6, label: 'Availability', description: 'Availability' },
   { id: 7, label: 'Portfolio', description: 'Portfolio' },
@@ -38,7 +38,25 @@ export type OnboardingFlowParamList = {
   OnboardingSteps: undefined;
 };
 
-export interface ChangesRequestedInfo {
-  requestedChanges: string[];
-  requiredStep?: OnboardingStepId;
-}
+export const COMPLETED_STEP_ORDER: string[] = [
+  'personal',
+  'business',
+  'skills',
+  'categories',
+  'services',
+  'availability',
+  'portfolio',
+  'verification',
+];
+
+export const STEP_TO_COMPLETED_KEY: Record<OnboardingStepId, string> = {
+  1: 'personal',
+  2: 'business',
+  3: 'skills',
+  4: 'categories',
+  5: 'services',
+  6: 'availability',
+  7: 'portfolio',
+  8: 'verification',
+  9: 'review',
+};

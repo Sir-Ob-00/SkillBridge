@@ -8,33 +8,33 @@ import {
   OnboardingServiceItem,
   PortfolioItemData,
   OnboardingHistoryItem,
+  User,
 } from '@app-types/index';
 import { Category } from '@constants/categories';
-import { ChangesRequestedInfo } from '../onboarding.types';
 
 export interface CategoryWithSkills extends Category {
   skills: Skill[];
 }
 
-export interface OnboardingStatusResponse {
+export interface OnboardingStatusData {
   status: OnboardingStatus;
   completedSteps: string[];
-  changesRequested?: ChangesRequestedInfo & {
-    rejectionReason?: string;
-    adminNotes?: string;
-  };
+  submittedAt: string | null;
+  reviewedAt: string | null;
+  reviewNotes: string | null;
+  rejectionReason: string | null;
 }
 
 export interface PersonalInfoPayload {
   phone: string;
-  profileImageUrl?: string;
+  profileImageUrl?: string | null;
 }
 
 export interface BusinessInfoPayload {
   businessName: string;
-  bio: string;
-  location: string;
-  pricingFrom: number;
+  bio?: string;
+  location?: string;
+  pricingFrom?: number | null;
 }
 
 export interface CategoriesPayload {
@@ -67,6 +67,14 @@ export interface SubmitPayload {
   notes?: string;
 }
 
+export interface SubmitError {
+  success: false;
+  message: string;
+  details?: {
+    missingFields?: string[];
+  };
+}
+
 export const onboardingApi = {
   getCategoriesWithSkills: async () => {
     const { data } = await apiClient.get<ApiResponse<CategoryWithSkills[]>>(API_ROUTES.CATEGORIES.LIST);
@@ -79,14 +87,14 @@ export const onboardingApi = {
   },
 
   getOnboardingStatus: async () => {
-    const { data } = await apiClient.get<ApiResponse<OnboardingStatusResponse>>(
+    const { data } = await apiClient.get<ApiResponse<OnboardingStatusData>>(
       API_ROUTES.ONBOARDING.STATUS
     );
     return data.data;
   },
 
   patchPersonalInfo: async (payload: PersonalInfoPayload) => {
-    const { data } = await apiClient.patch<ApiResponse<{ status: OnboardingStatus }>>(
+    const { data } = await apiClient.patch<ApiResponse<User>>(
       API_ROUTES.ONBOARDING.PERSONAL,
       payload
     );
@@ -94,7 +102,15 @@ export const onboardingApi = {
   },
 
   patchBusinessInfo: async (payload: BusinessInfoPayload) => {
-    const { data } = await apiClient.patch<ApiResponse<{ status: OnboardingStatus }>>(
+    const { data } = await apiClient.patch<ApiResponse<{
+      id: string;
+      userId: string;
+      businessName: string;
+      bio: string | null;
+      pricingFrom: string;
+      location: string | null;
+      applicationStatus: string;
+    }>>(
       API_ROUTES.ONBOARDING.BUSINESS,
       payload
     );
@@ -102,7 +118,7 @@ export const onboardingApi = {
   },
 
   patchCategories: async (payload: CategoriesPayload) => {
-    const { data } = await apiClient.patch<ApiResponse<{ status: OnboardingStatus }>>(
+    const { data } = await apiClient.patch<ApiResponse<string[]>>(
       API_ROUTES.ONBOARDING.CATEGORIES,
       payload
     );
@@ -110,7 +126,7 @@ export const onboardingApi = {
   },
 
   patchSkills: async (payload: SkillsPayload) => {
-    const { data } = await apiClient.patch<ApiResponse<{ status: OnboardingStatus }>>(
+    const { data } = await apiClient.patch<ApiResponse<string[]>>(
       API_ROUTES.ONBOARDING.SKILLS,
       payload
     );
@@ -118,7 +134,17 @@ export const onboardingApi = {
   },
 
   patchServices: async (payload: ServicesPayload) => {
-    const { data } = await apiClient.patch<ApiResponse<{ status: OnboardingStatus }>>(
+    const { data } = await apiClient.patch<ApiResponse<Array<{
+      id: string;
+      title: string;
+      description: string;
+      price: string;
+      durationMinutes: number;
+      categoryId: string;
+      isActive: boolean;
+      createdAt: string;
+      updatedAt: string;
+    }>>>(
       API_ROUTES.ONBOARDING.SERVICES,
       payload
     );
@@ -126,7 +152,13 @@ export const onboardingApi = {
   },
 
   patchAvailability: async (payload: AvailabilityPayload) => {
-    const { data } = await apiClient.patch<ApiResponse<{ status: OnboardingStatus }>>(
+    const { data } = await apiClient.patch<ApiResponse<Array<{
+      id: string;
+      day: string;
+      startTime: string;
+      endTime: string;
+      createdAt: string;
+    }>>>(
       API_ROUTES.ONBOARDING.AVAILABILITY,
       payload
     );
@@ -134,7 +166,12 @@ export const onboardingApi = {
   },
 
   patchPortfolio: async (payload: PortfolioPayload) => {
-    const { data } = await apiClient.patch<ApiResponse<{ status: OnboardingStatus }>>(
+    const { data } = await apiClient.patch<ApiResponse<Array<{
+      id: string;
+      imageUrl: string;
+      caption: string | null;
+      createdAt: string;
+    }>>>(
       API_ROUTES.ONBOARDING.PORTFOLIO,
       payload
     );
@@ -142,7 +179,19 @@ export const onboardingApi = {
   },
 
   patchVerification: async (payload: VerificationPayload) => {
-    const { data } = await apiClient.patch<ApiResponse<{ status: OnboardingStatus }>>(
+    const { data } = await apiClient.patch<ApiResponse<{
+      id: string;
+      artisanProfileId: string;
+      institution: string;
+      studentId: string;
+      verificationImageUrl: string;
+      status: string;
+      reviewNotes: string | null;
+      reviewedByUserId: string | null;
+      reviewedAt: string | null;
+      createdAt: string;
+      updatedAt: string;
+    }>>(
       API_ROUTES.ONBOARDING.VERIFICATION,
       payload
     );
@@ -157,7 +206,13 @@ export const onboardingApi = {
   },
 
   submitApplication: async (payload?: SubmitPayload) => {
-    const { data } = await apiClient.post<ApiResponse<{ status: OnboardingStatus }>>(
+    const { data } = await apiClient.post<ApiResponse<{
+      id: string;
+      userId: string;
+      businessName: string;
+      applicationStatus: string;
+      submittedAt: string;
+    }>>(
       API_ROUTES.ONBOARDING.SUBMIT,
       payload || {}
     );

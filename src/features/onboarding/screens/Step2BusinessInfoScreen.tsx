@@ -24,11 +24,12 @@ export const Step2BusinessInfoScreen: React.FC<Props> = ({ navigation }) => {
 
   const validate = (): boolean => {
     const errs: Record<string, string> = {};
-    if (businessName.trim().length < 2) errs.businessName = 'Enter your business name.';
-    if (bio.trim().length < 10) errs.bio = 'Please write at least 10 characters about your work.';
-    if (!location.trim()) errs.location = 'Enter your location.';
-    if (!pricingFrom || isNaN(Number(pricingFrom)) || Number(pricingFrom) <= 0) {
-      errs.pricingFrom = 'Enter a valid starting price.';
+    if (businessName.trim().length < 2) errs.businessName = 'Business name must be at least 2 characters.';
+    else if (businessName.trim().length > 100) errs.businessName = 'Business name must be at most 100 characters.';
+    if (bio.trim().length > 1000) errs.bio = 'Bio must be at most 1000 characters.';
+    if (location.trim().length > 120) errs.location = 'Location must be at most 120 characters.';
+    if (pricingFrom && (isNaN(Number(pricingFrom)) || Number(pricingFrom) < 0)) {
+      errs.pricingFrom = 'Enter a valid non-negative price.';
     }
     setErrors(errs);
     return Object.keys(errs).length === 0;
@@ -38,14 +39,19 @@ export const Step2BusinessInfoScreen: React.FC<Props> = ({ navigation }) => {
     if (!validate()) return;
     setIsSaving(true);
     try {
-      const payload = {
+      const payload: Record<string, unknown> = {
         businessName: businessName.trim(),
-        bio: bio.trim(),
-        location: location.trim(),
-        pricingFrom: Number(pricingFrom),
       };
-      await onboardingApi.patchBusinessInfo(payload);
-      cacheBusinessInfo(payload.businessName, payload.bio, payload.location, payload.pricingFrom);
+      if (bio.trim()) payload.bio = bio.trim();
+      if (location.trim()) payload.location = location.trim();
+      if (pricingFrom) payload.pricingFrom = Number(pricingFrom);
+      await onboardingApi.patchBusinessInfo(payload as any);
+      cacheBusinessInfo(
+        payload.businessName as string,
+        (payload.bio as string) || '',
+        (payload.location as string) || '',
+        (payload.pricingFrom as number) || 0,
+      );
       navigation.navigate('OnboardingStep3');
     } catch (err) {
       feedbackStore.show({
@@ -70,7 +76,7 @@ export const Step2BusinessInfoScreen: React.FC<Props> = ({ navigation }) => {
       onBack={() => navigation.navigate('OnboardingStep1')}
       onNext={handleNext}
       onSaveDraft={handleSaveDraft}
-      disableNext={businessName.trim().length < 2 || bio.trim().length < 10 || !location || !pricingFrom}
+      disableNext={businessName.trim().length < 2 || businessName.trim().length > 100}
       isNextLoading={isSaving}
     >
       <Text className="mb-6 font-heading text-xl font-bold text-gray-900">Business Information</Text>

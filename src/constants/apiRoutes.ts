@@ -47,7 +47,7 @@ export const API_ROUTES = {
     CREATE: '/api/v1/reports',
   },
   ONBOARDING: {
-    STATUS: '/api/v1/artisans/me/onboarding/status',
+    STATUS: '/api/v1/artisans/me/onboarding',
     HISTORY: '/api/v1/artisans/me/onboarding/history',
     PERSONAL: '/api/v1/artisans/me/onboarding/personal',
     BUSINESS: '/api/v1/artisans/me/onboarding/business',

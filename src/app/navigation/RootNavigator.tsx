@@ -48,8 +48,8 @@ export const RootNavigator: React.FC = () => {
     return <Loader fullScreen label="Loading your profile..." />;
   }
 
-  if (role === 'artisan' && onboardingStatus && onboardingStatus !== 'ACTIVE') {
-    return <ArtisanOnboardingRouter onboardingStatus={onboardingStatus} />;
+  if (role === 'artisan' && onboardingStatus !== 'ACTIVE') {
+    return <ArtisanOnboardingRouter onboardingStatus={onboardingStatus || 'PENDING_PROFILE'} />;
   }
 
   switch (role) {

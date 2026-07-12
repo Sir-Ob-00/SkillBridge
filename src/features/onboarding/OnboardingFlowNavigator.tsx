@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { OnboardingFlowParamList } from './onboarding.types';
 import { OnboardingStatus } from '@app-types/index';
@@ -7,6 +7,8 @@ import { UnderReviewScreen } from './screens/UnderReviewScreen';
 import { RejectedScreen } from './screens/RejectedScreen';
 import { ChangesRequestedScreen } from './screens/ChangesRequestedScreen';
 import { OnboardingNavigator } from './OnboardingNavigator';
+import { onboardingApi } from './services/onboarding.api';
+import { useOnboardingStore } from './store/onboarding.store';
 
 const Stack = createNativeStackNavigator<OnboardingFlowParamList>();
 
@@ -32,6 +34,22 @@ const initialRoute = (status: OnboardingStatus): keyof OnboardingFlowParamList =
 };
 
 export const OnboardingFlowNavigator: React.FC<Props> = ({ onboardingStatus }) => {
+  const setCompletedSteps = useOnboardingStore((s) => s.setCompletedSteps);
+
+  useEffect(() => {
+    const fetchStatus = async () => {
+      try {
+        const result = await onboardingApi.getOnboardingStatus();
+        setCompletedSteps(result.completedSteps);
+      } catch {
+        // Use empty completed steps as fallback
+      }
+    };
+    if (onboardingStatus === 'PENDING_PROFILE' || onboardingStatus === 'CHANGES_REQUESTED') {
+      void fetchStatus();
+    }
+  }, [onboardingStatus, setCompletedSteps]);
+
   return (
     <Stack.Navigator
       initialRouteName={initialRoute(onboardingStatus)}

@@ -55,6 +55,11 @@ export const Step7PortfolioScreen: React.FC<Props> = ({ navigation }) => {
       Alert.alert('Required', 'Please upload at least one portfolio image.');
       return;
     }
+    const longCaption = Object.values(captions).find((c) => c.length > 200);
+    if (longCaption) {
+      Alert.alert('Validation', 'Caption must be at most 200 characters.');
+      return;
+    }
     setIsSaving(true);
     try {
       const items: { imageUrl: string; caption: string }[] = [];

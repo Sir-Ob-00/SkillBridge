@@ -9,7 +9,7 @@ import { colors } from '@shared/ui/colors';
 import { Skill } from '@app-types/index';
 import { useFeedbackStore } from '@store/feedback.store';
 
-type Props = NativeStackScreenProps<OnboardingStackParamList, 'OnboardingStep4'>;
+type Props = NativeStackScreenProps<OnboardingStackParamList, 'OnboardingStep3'>;
 
 export const Step4SkillsScreen: React.FC<Props> = ({ navigation }) => {
   const { cachedCategoryIds, cachedSkillIds, cacheSkillIds, saveDraft } = useOnboardingStore();
@@ -42,6 +42,10 @@ export const Step4SkillsScreen: React.FC<Props> = ({ navigation }) => {
   };
 
   const toggleSkill = (id: string) => {
+    if (selectedIds.length >= 20 && !selectedIds.includes(id)) {
+      Alert.alert('Limit', 'You can select up to 20 skills.');
+      return;
+    }
     setSelectedIds((prev) =>
       prev.includes(id) ? prev.filter((s) => s !== id) : [...prev, id]
     );
@@ -56,7 +60,7 @@ export const Step4SkillsScreen: React.FC<Props> = ({ navigation }) => {
     try {
       await onboardingApi.patchSkills({ skillIds: selectedIds });
       cacheSkillIds(selectedIds);
-      navigation.navigate('OnboardingStep5');
+      navigation.navigate('OnboardingStep4');
     } catch (err) {
       feedbackStore.show({ type: 'error', title: 'Error', message: 'Could not save skills. Please try again.' });
     } finally {
@@ -72,7 +76,7 @@ export const Step4SkillsScreen: React.FC<Props> = ({ navigation }) => {
 
   if (isLoading) {
     return (
-      <OnboardingLayout currentStep={4}>
+      <OnboardingLayout currentStep={3}>
         <View className="flex-1 items-center justify-center">
           <ActivityIndicator size="large" color={colors.primary} />
           <Text className="mt-4 text-gray-500">Loading skills...</Text>
@@ -83,7 +87,7 @@ export const Step4SkillsScreen: React.FC<Props> = ({ navigation }) => {
 
   if (error) {
     return (
-      <OnboardingLayout currentStep={4}>
+      <OnboardingLayout currentStep={3}>
         <View className="flex-1 items-center justify-center">
           <Text className="mb-4 text-center text-red-500">{error}</Text>
           <Pressable onPress={loadSkills}><Text className="font-bold text-primary">Retry</Text></Pressable>
@@ -94,15 +98,15 @@ export const Step4SkillsScreen: React.FC<Props> = ({ navigation }) => {
 
   return (
     <OnboardingLayout
-      currentStep={4}
-      onBack={() => navigation.navigate('OnboardingStep3')}
+      currentStep={3}
+      onBack={() => navigation.navigate('OnboardingStep2')}
       onNext={handleNext}
       onSaveDraft={handleSaveDraft}
       disableNext={selectedIds.length === 0}
       isNextLoading={isSaving}
     >
       <Text className="mb-2 font-heading text-xl font-bold text-gray-900">Skills</Text>
-      <Text className="mb-4 text-sm text-gray-500">Select the skills you offer from your chosen categories.</Text>
+      <Text className="mb-4 text-sm text-gray-500">Select the skills you offer. Choose from the available list.</Text>
 
       {allSkills.length > 0 ? (
         <View className="flex-row flex-wrap gap-2">
@@ -124,7 +128,7 @@ export const Step4SkillsScreen: React.FC<Props> = ({ navigation }) => {
           })}
         </View>
       ) : (
-        <Text className="text-sm text-gray-400">No skills available. Please select a category first.</Text>
+        <Text className="text-sm text-gray-400">No skills available.</Text>
       )}
     </OnboardingLayout>
   );

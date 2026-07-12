@@ -23,8 +23,8 @@ export const RejectedScreen: React.FC<Props> = ({ navigation }) => {
   const loadStatus = async () => {
     try {
       const result = await onboardingApi.getOnboardingStatus();
-      if (result.changesRequested?.rejectionReason) {
-        setRejectionReason(result.changesRequested.rejectionReason);
+      if (result.rejectionReason) {
+        setRejectionReason(result.rejectionReason);
       }
     } catch {
       // keep default message

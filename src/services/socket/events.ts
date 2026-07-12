@@ -16,6 +16,8 @@ export const SOCKET_EVENTS = {
   BOOKING_ACCEPTED: 'booking_accepted',
   BOOKING_COMPLETED: 'booking_completed',
   BOOKING_CANCELLED: 'booking_cancelled',
+
+  ARTISAN_VERIFIED: 'ARTISAN_VERIFIED',
 } as const;
 
 export type SocketEvent = (typeof SOCKET_EVENTS)[keyof typeof SOCKET_EVENTS];

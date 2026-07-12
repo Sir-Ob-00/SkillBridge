@@ -9,7 +9,6 @@ import { Input } from '@shared/components';
 import { useOnboardingStore } from '../store/onboarding.store';
 import { useAuth } from '@hooks/useAuth';
 import { colors } from '@shared/ui/colors';
-import { validatePhone } from '@utils/validateEmail';
 import { uploadService } from '@services/upload.service';
 import { onboardingApi } from '../services/onboarding.api';
 import { useFeedbackStore } from '@store/feedback.store';
@@ -52,7 +51,10 @@ export const Step1PersonalInfoScreen: React.FC<Props> = ({ navigation }) => {
 
   const validate = (): boolean => {
     const errs: Record<string, string> = {};
-    if (!validatePhone(phone)) errs.phone = 'Enter a valid phone number.';
+    const trimmed = phone.trim();
+    if (!trimmed) errs.phone = 'Phone number is required.';
+    else if (trimmed.length < 7) errs.phone = 'Phone number must be at least 7 characters.';
+    else if (trimmed.length > 20) errs.phone = 'Phone number must be at most 20 characters.';
     setErrors(errs);
     return Object.keys(errs).length === 0;
   };
@@ -94,7 +96,7 @@ export const Step1PersonalInfoScreen: React.FC<Props> = ({ navigation }) => {
       currentStep={1}
       onNext={handleNext}
       onSaveDraft={handleSaveDraft}
-      disableNext={!validatePhone(phone)}
+      disableNext={!phone.trim() || phone.trim().length < 7 || phone.trim().length > 20}
       isNextLoading={isSaving}
     >
       <Text className="mb-4 font-heading text-xl font-bold text-gray-900">Personal Information</Text>

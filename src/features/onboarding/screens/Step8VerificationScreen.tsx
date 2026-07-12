@@ -42,6 +42,8 @@ export const Step8VerificationScreen: React.FC<Props> = ({ navigation }) => {
   const validate = (): boolean => {
     const errs: Record<string, string> = {};
     if (!institution.trim()) errs.institution = 'Enter your institution name.';
+    else if (institution.trim().length < 2) errs.institution = 'Institution name must be at least 2 characters.';
+    else if (institution.trim().length > 200) errs.institution = 'Institution name must be at most 200 characters.';
     if (!studentId.trim()) errs.studentId = 'Enter your student ID number.';
     if (!localVerificationImageUri && !cachedVerificationImageUrl) errs.image = 'Please capture a verification image.';
     setErrors(errs);

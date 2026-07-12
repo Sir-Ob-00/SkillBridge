@@ -12,7 +12,7 @@ type Props = NativeStackScreenProps<OnboardingFlowParamList, 'ChangesRequested'>
 
 export const ChangesRequestedScreen: React.FC<Props> = ({ navigation }) => {
   const { logout } = useAuth();
-  const [notes, setNotes] = useState<string[]>([]);
+  const [notes, setNotes] = useState('');
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -22,9 +22,9 @@ export const ChangesRequestedScreen: React.FC<Props> = ({ navigation }) => {
   const loadChanges = async () => {
     try {
       const result = await onboardingApi.getOnboardingStatus();
-      setNotes(result.changesRequested?.requestedChanges ?? ['Please review your application and make the necessary updates.']);
+      setNotes(result.reviewNotes || 'Please review your application and make the necessary updates.');
     } catch {
-      setNotes(['Please review your application and make the necessary updates.']);
+      setNotes('Please review your application and make the necessary updates.');
     } finally {
       setLoading(false);
     }
@@ -54,7 +54,7 @@ export const ChangesRequestedScreen: React.FC<Props> = ({ navigation }) => {
       }
       title="Changes requested"
       subtitle="A few updates needed"
-      message={notes.join('\n\n')}
+      message={notes}
       actionLabel="Resume Application"
       onAction={() => navigation.navigate('OnboardingSteps')}
       secondaryActionLabel="Sign Out"

@@ -62,10 +62,14 @@ export const Step5ServicesScreen: React.FC<Props> = ({ navigation }) => {
     const errs: Record<string, string> = {};
     if (items.length === 0) errs.services = 'Add at least one service.';
     items.forEach((s, i) => {
-      if (!s.title.trim()) errs[`title_${i}`] = 'Required';
+      if (!s.title.trim() || s.title.trim().length < 3) errs[`title_${i}`] = 'Title must be at least 3 characters.';
+      if (s.title.trim().length > 100) errs[`title_${i}`] = 'Title must be at most 100 characters.';
+      if (!s.description.trim() || s.description.trim().length < 10) errs[`description_${i}`] = 'Description must be at least 10 characters.';
+      if (s.description.trim().length > 1000) errs[`description_${i}`] = 'Description must be at most 1000 characters.';
       if (!s.categoryId) errs[`categoryId_${i}`] = 'Select a category';
-      if (!s.price || s.price <= 0) errs[`price_${i}`] = 'Enter valid price';
-      if (!s.durationMinutes || s.durationMinutes <= 0) errs[`duration_${i}`] = 'Enter valid duration';
+      if (!s.price || s.price <= 0) errs[`price_${i}`] = 'Enter a valid positive price.';
+      if (!s.durationMinutes || s.durationMinutes <= 0) errs[`duration_${i}`] = 'Enter a valid positive duration.';
+      else if (s.durationMinutes > 1440) errs[`duration_${i}`] = 'Duration cannot exceed 1440 minutes.';
     });
     setErrors(errs);
     return Object.keys(errs).length === 0;

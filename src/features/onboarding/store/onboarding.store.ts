@@ -7,6 +7,7 @@ import {
   PortfolioItemData,
 } from '@app-types/index';
 import { secureStorage } from '@services/storage/secureStorage';
+import { COMPLETED_STEP_ORDER, STEP_TO_COMPLETED_KEY } from '../onboarding.types';
 
 const ONBOARDING_DRAFT_KEY = 'skillbridge.onboardingDraft';
 
@@ -16,6 +17,8 @@ interface OnboardingState {
   isLoading: boolean;
   isSubmitting: boolean;
   error: string | null;
+
+  completedSteps: string[];
 
   localProfileImageUri: string | null;
   localPortfolioUris: string[];
@@ -37,6 +40,9 @@ interface OnboardingState {
   cachedVerificationImageUrl: string | null;
 
   setCurrentStep: (step: OnboardingStepId) => void;
+  setCompletedSteps: (steps: string[]) => void;
+
+  isStepAccessible: (step: OnboardingStepId) => boolean;
 
   cachePersonalInfo: (phone: string, profileImageUrl?: string) => void;
   cacheBusinessInfo: (businessName: string, bio: string, location: string, pricingFrom: number) => void;
@@ -66,6 +72,7 @@ export const useOnboardingStore = create<OnboardingState>((set, get) => ({
   isLoading: false,
   isSubmitting: false,
   error: null,
+  completedSteps: [],
   localPortfolioUris: [],
   localVerificationImageUri: null,
   localProfileImageUri: null,
@@ -85,6 +92,16 @@ export const useOnboardingStore = create<OnboardingState>((set, get) => ({
   cachedVerificationImageUrl: null,
 
   setCurrentStep: (step) => set({ currentStep: step }),
+  setCompletedSteps: (steps) => set({ completedSteps: steps }),
+
+  isStepAccessible: (step) => {
+    const { completedSteps } = get();
+    if (step === 1) return true;
+    const prereqStep = (step - 1) as OnboardingStepId;
+    const prereqKey = STEP_TO_COMPLETED_KEY[prereqStep];
+    if (!prereqKey) return false;
+    return completedSteps.includes(prereqKey);
+  },
 
   cachePersonalInfo: (phone, profileImageUrl) =>
     set({ cachedPhone: phone, cachedProfileImageUrl: profileImageUrl ?? null }),
@@ -161,6 +178,7 @@ export const useOnboardingStore = create<OnboardingState>((set, get) => ({
     set({
       currentStep: 1,
       payload: {},
+      completedSteps: [],
       localPortfolioUris: [],
       localVerificationImageUri: null,
       localProfileImageUri: null,

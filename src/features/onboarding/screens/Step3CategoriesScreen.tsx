@@ -8,7 +8,7 @@ import { onboardingApi, CategoryWithSkills } from '../services/onboarding.api';
 import { colors } from '@shared/ui/colors';
 import { useFeedbackStore } from '@store/feedback.store';
 
-type Props = NativeStackScreenProps<OnboardingStackParamList, 'OnboardingStep3'>;
+type Props = NativeStackScreenProps<OnboardingStackParamList, 'OnboardingStep4'>;
 
 export const Step3CategoriesScreen: React.FC<Props> = ({ navigation }) => {
   const { cachedCategoryIds, cacheCategoryIds, saveDraft } = useOnboardingStore();
@@ -45,11 +45,15 @@ export const Step3CategoriesScreen: React.FC<Props> = ({ navigation }) => {
       Alert.alert('Selection required', 'Please select at least one category.');
       return;
     }
+    if (selectedIds.length > 10) {
+      Alert.alert('Limit', 'You can select up to 10 categories.');
+      return;
+    }
     setIsSaving(true);
     try {
       await onboardingApi.patchCategories({ categoryIds: selectedIds });
       cacheCategoryIds(selectedIds);
-      navigation.navigate('OnboardingStep4');
+      navigation.navigate('OnboardingStep5');
     } catch (err) {
       feedbackStore.show({ type: 'error', title: 'Error', message: 'Could not save categories. Please try again.' });
     } finally {
@@ -65,7 +69,7 @@ export const Step3CategoriesScreen: React.FC<Props> = ({ navigation }) => {
 
   if (isLoading) {
     return (
-      <OnboardingLayout currentStep={3}>
+      <OnboardingLayout currentStep={4}>
         <View className="flex-1 items-center justify-center">
           <ActivityIndicator size="large" color={colors.primary} />
           <Text className="mt-4 text-gray-500">Loading categories...</Text>
@@ -76,7 +80,7 @@ export const Step3CategoriesScreen: React.FC<Props> = ({ navigation }) => {
 
   if (error) {
     return (
-      <OnboardingLayout currentStep={3}>
+      <OnboardingLayout currentStep={4}>
         <View className="flex-1 items-center justify-center">
           <Text className="mb-4 text-center text-red-500">{error}</Text>
           <Pressable onPress={loadCategories}><Text className="font-bold text-primary">Retry</Text></Pressable>
@@ -87,8 +91,8 @@ export const Step3CategoriesScreen: React.FC<Props> = ({ navigation }) => {
 
   return (
     <OnboardingLayout
-      currentStep={3}
-      onBack={() => navigation.navigate('OnboardingStep2')}
+      currentStep={4}
+      onBack={() => navigation.navigate('OnboardingStep3')}
       onNext={handleNext}
       onSaveDraft={handleSaveDraft}
       disableNext={selectedIds.length === 0}
