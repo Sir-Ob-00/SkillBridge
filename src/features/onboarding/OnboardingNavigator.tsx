@@ -1,6 +1,6 @@
 import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { OnboardingStackParamList } from './onboarding.types';
+import { OnboardingStackParamList, STEP_ROUTES } from './onboarding.types';
 import { Step1PersonalInfoScreen } from './screens/Step1PersonalInfoScreen';
 import { Step2BusinessInfoScreen } from './screens/Step2BusinessInfoScreen';
 import { Step3CategoriesScreen } from './screens/Step3CategoriesScreen';
@@ -14,25 +14,12 @@ import { useOnboardingStore } from './store/onboarding.store';
 
 const Stack = createNativeStackNavigator<OnboardingStackParamList>();
 
-const STEP_ROUTES: Record<number, keyof OnboardingStackParamList> = {
-  1: 'OnboardingStep1',
-  2: 'OnboardingStep2',
-  3: 'OnboardingStep3',
-  4: 'OnboardingStep4',
-  5: 'OnboardingStep5',
-  6: 'OnboardingStep6',
-  7: 'OnboardingStep7',
-  8: 'OnboardingStep8',
-  9: 'OnboardingStep9',
-};
-
 export const OnboardingNavigator: React.FC = () => {
   const currentStep = useOnboardingStore((s) => s.currentStep);
-  const initialRoute = STEP_ROUTES[currentStep] || 'OnboardingStep1';
 
   return (
     <Stack.Navigator
-      initialRouteName={initialRoute}
+      initialRouteName={STEP_ROUTES[currentStep] || 'OnboardingStep1'}
       screenOptions={{
         headerShown: false,
         animation: 'slide_from_right',

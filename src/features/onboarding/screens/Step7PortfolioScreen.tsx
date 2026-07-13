@@ -11,10 +11,13 @@ import { colors } from '@shared/ui/colors';
 import { uploadService } from '@services/upload.service';
 import { onboardingApi } from '../services/onboarding.api';
 import { useFeedbackStore } from '@store/feedback.store';
+import { useEnsureStackHasAllSteps } from '../hooks/useOnboardingNavigation';
 
 type Props = NativeStackScreenProps<OnboardingStackParamList, 'OnboardingStep7'>;
 
 export const Step7PortfolioScreen: React.FC<Props> = ({ navigation }) => {
+  useEnsureStackHasAllSteps(navigation, 7);
+
   const {
     localPortfolioUris,
     addLocalPortfolioUri,
@@ -78,6 +81,7 @@ export const Step7PortfolioScreen: React.FC<Props> = ({ navigation }) => {
       await saveDraft();
       navigation.navigate('OnboardingStep8');
     } catch (err) {
+      console.error('[Step7Portfolio] upload error:', err);
       feedbackStore.show({ type: 'error', title: 'Upload Error', message: 'Could not upload portfolio images. Please try again.' });
     } finally {
       setUploadingIndex(null);
@@ -98,7 +102,7 @@ export const Step7PortfolioScreen: React.FC<Props> = ({ navigation }) => {
       onSaveDraft={handleSaveDraft}
       disableNext={localPortfolioUris.length === 0}
       isNextLoading={isSaving}
-      nextLabel="Upload & Continue"
+      nextLabel="Continue"
     >
       <Text className="mb-2 font-heading text-xl font-bold text-gray-900">Portfolio</Text>
       <Text className="mb-4 text-sm text-gray-500">Upload images showcasing your work.</Text>

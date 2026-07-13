@@ -38,6 +38,7 @@ export interface ArtisanProfile {
   services: Service[];
   isVerified: boolean;
   isAvailable?: boolean;
+  portfolio?: PortfolioItem[];
 }
 
 export interface Service {

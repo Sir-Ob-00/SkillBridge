@@ -33,13 +33,6 @@ export const artisanService = {
     return data.data;
   },
 
-  getPortfolio: async (artisanId: string) => {
-    const { data } = await apiClient.get<
-      ApiResponse<PortfolioItem[]>
-    >(API_ROUTES.ARTISANS.PORTFOLIO(artisanId));
-    return data.data;
-  },
-
   addPortfolioItem: async (
     artisanId: string,
     imageUri: string,

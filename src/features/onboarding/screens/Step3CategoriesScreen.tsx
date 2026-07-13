@@ -8,10 +8,13 @@ import { useOnboardingStore } from '../store/onboarding.store';
 import { onboardingApi, ApiCategory } from '../services/onboarding.api';
 import { colors } from '@shared/ui/colors';
 import { useFeedbackStore } from '@store/feedback.store';
+import { useEnsureStackHasAllSteps } from '../hooks/useOnboardingNavigation';
 
 type Props = NativeStackScreenProps<OnboardingStackParamList, 'OnboardingStep3'>;
 
 export const Step3CategoriesScreen: React.FC<Props> = ({ navigation }) => {
+  useEnsureStackHasAllSteps(navigation, 3);
+
   const { cachedCategoryIds, cacheCategoryIds, saveDraft } = useOnboardingStore();
   const feedbackStore = useFeedbackStore();
 
@@ -50,7 +53,7 @@ export const Step3CategoriesScreen: React.FC<Props> = ({ navigation }) => {
     try {
       await onboardingApi.patchCategories({ categoryIds: [selectedId] });
       cacheCategoryIds([selectedId]);
-      useOnboardingStore.getState().completeStep('skills');
+      useOnboardingStore.getState().completeStep('categories');
       await saveDraft();
       navigation.navigate('OnboardingStep4');
     } catch (err) {

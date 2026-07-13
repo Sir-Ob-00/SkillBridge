@@ -7,10 +7,13 @@ import { Input } from '@shared/components';
 import { useOnboardingStore } from '../store/onboarding.store';
 import { onboardingApi } from '../services/onboarding.api';
 import { useFeedbackStore } from '@store/feedback.store';
+import { useEnsureStackHasAllSteps } from '../hooks/useOnboardingNavigation';
 
 type Props = NativeStackScreenProps<OnboardingStackParamList, 'OnboardingStep2'>;
 
 export const Step2BusinessInfoScreen: React.FC<Props> = ({ navigation }) => {
+  useEnsureStackHasAllSteps(navigation, 2);
+
   const { cachedBusinessName, cachedBio, cachedLocation, cachedPricingFrom, cacheBusinessInfo, saveDraft } =
     useOnboardingStore();
   const feedbackStore = useFeedbackStore();

@@ -16,7 +16,7 @@ export const RootNavigator: React.FC = () => {
   const role = user?.role;
   const onboardingStatus = user?.onboardingStatus;
   const [showSplash, setShowSplash] = useState(true);
-  const [isRefreshingUser, setIsRefreshingUser] = useState(false);
+  const [isRefreshingUser, setIsRefreshingUser] = useState(() => isAuthenticated && !!user);
 
   useEffect(() => {
     if (isAuthenticated && user) {

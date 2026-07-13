@@ -168,6 +168,7 @@ export const useOnboardingStore = create<OnboardingState>((set, get) => ({
       // 1. Server is canonical source
       try {
         const serverDraft = await onboardingApi.getDraft();
+        console.log('[loadDraft] serverDraft:', JSON.stringify(serverDraft));
         if (serverDraft) {
           set({
             currentStep: serverDraft.currentStep as OnboardingStepId,
@@ -195,6 +196,7 @@ export const useOnboardingStore = create<OnboardingState>((set, get) => ({
       // 2. Fallback: AsyncStorage
       if (!loaded) {
         const localDraft = await secureStorage.getItem<OnboardingDraft>(getDraftKey());
+        console.log('[loadDraft] AsyncStorage fallback localDraft:', JSON.stringify(localDraft));
         if (localDraft) {
           set({
             currentStep: localDraft.currentStep,
@@ -214,6 +216,44 @@ export const useOnboardingStore = create<OnboardingState>((set, get) => ({
             cachedStudentId: localDraft.cachedStudentId ?? '',
             cachedVerificationImageUrl: localDraft.cachedVerificationImageUrl ?? null,
           });
+        }
+      }
+
+      // 3. Merge: if server draft was loaded but missing non-essential fields,
+      //    fill them in from AsyncStorage
+      if (loaded) {
+        const state = get();
+        const localDraft = await secureStorage.getItem<OnboardingDraft>(getDraftKey());
+        if (localDraft) {
+          const updates: Partial<OnboardingState> = {};
+          if (!state.cachedCategoryIds?.length && localDraft.cachedCategoryIds?.length) {
+            console.log('[loadDraft] merging cachedCategoryIds from AsyncStorage:', localDraft.cachedCategoryIds);
+            updates.cachedCategoryIds = localDraft.cachedCategoryIds;
+          }
+          if (!state.cachedSkillIds?.length && localDraft.cachedSkillIds?.length) {
+            console.log('[loadDraft] merging cachedSkillIds from AsyncStorage:', localDraft.cachedSkillIds);
+            updates.cachedSkillIds = localDraft.cachedSkillIds;
+          }
+          if (!state.cachedServices?.length && localDraft.cachedServices?.length) {
+            console.log('[loadDraft] merging cachedServices from AsyncStorage:', localDraft.cachedServices);
+            updates.cachedServices = localDraft.cachedServices;
+          }
+          if (!state.cachedSlots?.length && localDraft.cachedSlots?.length) {
+            console.log('[loadDraft] merging cachedSlots from AsyncStorage:', localDraft.cachedSlots);
+            updates.cachedSlots = localDraft.cachedSlots;
+          }
+          if (!state.cachedPortfolioItems?.length && localDraft.cachedPortfolioItems?.length) {
+            console.log('[loadDraft] merging cachedPortfolioItems from AsyncStorage:', localDraft.cachedPortfolioItems);
+            updates.cachedPortfolioItems = localDraft.cachedPortfolioItems;
+          }
+          if (Object.keys(updates).length > 0) {
+            console.log('[loadDraft] applying merged updates:', Object.keys(updates));
+            set(updates);
+          } else {
+            console.log('[loadDraft] no fields needed merge');
+          }
+        } else {
+          console.log('[loadDraft] no AsyncStorage draft for merge');
         }
       }
     } catch (err) {
@@ -238,7 +278,7 @@ export const useOnboardingStore = create<OnboardingState>((set, get) => ({
       currentStep,
       completedSteps,
       phone: cachedPhone || null,
-      profileImageUrl: cachedProfileImageUrl,
+      profileImageUrl: cachedProfileImageUrl || undefined,
       businessName: cachedBusinessName || undefined,
       bio: cachedBio || null,
       location: cachedLocation || null,
@@ -250,8 +290,10 @@ export const useOnboardingStore = create<OnboardingState>((set, get) => ({
       portfolioItems: cachedPortfolioItems,
       institution: cachedInstitution || undefined,
       studentId: cachedStudentId || undefined,
-      verificationImageUrl: cachedVerificationImageUrl,
+      verificationImageUrl: cachedVerificationImageUrl || undefined,
     };
+
+    console.log('[saveDraft] categoryIds:', cachedCategoryIds, 'skillIds:', cachedSkillIds, 'services.length:', cachedServices.length);
 
     try {
       await onboardingApi.putDraft(serverDraft);

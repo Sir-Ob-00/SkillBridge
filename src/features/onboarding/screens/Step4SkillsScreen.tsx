@@ -8,10 +8,13 @@ import { onboardingApi } from '../services/onboarding.api';
 import { colors } from '@shared/ui/colors';
 import { Skill } from '@app-types/index';
 import { useFeedbackStore } from '@store/feedback.store';
+import { useEnsureStackHasAllSteps } from '../hooks/useOnboardingNavigation';
 
 type Props = NativeStackScreenProps<OnboardingStackParamList, 'OnboardingStep4'>;
 
 export const Step4SkillsScreen: React.FC<Props> = ({ navigation }) => {
+  useEnsureStackHasAllSteps(navigation, 4);
+
   const { cachedCategoryIds, cachedSkillIds, cacheSkillIds, saveDraft } = useOnboardingStore();
   const feedbackStore = useFeedbackStore();
 
@@ -23,14 +26,18 @@ export const Step4SkillsScreen: React.FC<Props> = ({ navigation }) => {
   const [error, setError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
 
+  console.log('[Step4SkillsScreen] mounted, cachedCategoryIds:', cachedCategoryIds, 'cachedSkillIds:', cachedSkillIds);
+
   useEffect(() => {
+    console.log('[Step4SkillsScreen] effect running, categoryId:', categoryId);
     if (categoryId) {
+      setError(null);
       loadSkills(categoryId);
     } else {
       setError('No category selected. Please go back and pick a category first.');
       setIsLoading(false);
     }
-  }, []);
+  }, [categoryId]);
 
   const loadSkills = async (catId: string) => {
     setIsLoading(true);
@@ -63,7 +70,7 @@ export const Step4SkillsScreen: React.FC<Props> = ({ navigation }) => {
     try {
       await onboardingApi.patchSkills({ skillIds: selectedIds });
       cacheSkillIds(selectedIds);
-      useOnboardingStore.getState().completeStep('categories');
+      useOnboardingStore.getState().completeStep('skills');
       await saveDraft();
       navigation.navigate('OnboardingStep5');
     } catch (err) {

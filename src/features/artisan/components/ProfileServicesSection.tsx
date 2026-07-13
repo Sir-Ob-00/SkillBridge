@@ -188,7 +188,7 @@ export const ProfileServicesSection: React.FC<ProfileServicesSectionProps> = ({
                 </Text>
                 <View className="ml-2 rounded-full bg-gray-100 px-2 py-0.5">
                   <Text className="text-[10px] font-medium text-gray-600 uppercase">
-                    {item.category}
+                    {(item as any).categoryName ?? ((item as any).category?.name ?? (item as any).category ?? '')}
                   </Text>
                 </View>
               </View>

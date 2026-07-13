@@ -25,7 +25,7 @@ export const ProfileBusinessCard: React.FC<ProfileBusinessCardProps> = ({
           <View className="relative">
             <Avatar
               name={user?.name ?? 'Artisan'}
-              imageUrl={user?.avatarUrl}
+              imageUrl={user?.avatarUrl ?? artisanProfile?.profileImageUrl ?? artisanProfile?.avatarUrl}
               size="xl"
             />
             <View className="absolute bottom-0 right-0 h-8 w-8 items-center justify-center rounded-full border-2 border-white bg-primary shadow-sm">

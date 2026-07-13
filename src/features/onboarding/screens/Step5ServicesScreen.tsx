@@ -10,10 +10,13 @@ import { colors } from '@shared/ui/colors';
 import { OnboardingServiceItem } from '@app-types/index';
 import { onboardingApi, ApiCategory } from '../services/onboarding.api';
 import { useFeedbackStore } from '@store/feedback.store';
+import { useEnsureStackHasAllSteps } from '../hooks/useOnboardingNavigation';
 
 type Props = NativeStackScreenProps<OnboardingStackParamList, 'OnboardingStep5'>;
 
 export const Step5ServicesScreen: React.FC<Props> = ({ navigation }) => {
+  useEnsureStackHasAllSteps(navigation, 5);
+
   const { cachedCategoryIds, cachedServices, cacheServices, saveDraft } = useOnboardingStore();
   const feedbackStore = useFeedbackStore();
 
@@ -113,7 +116,7 @@ export const Step5ServicesScreen: React.FC<Props> = ({ navigation }) => {
       onSaveDraft={handleSaveDraft}
       disableNext={items.length === 0}
       isNextLoading={isSaving}
-      nextLabel="Save & Continue"
+      nextLabel="Continue"
     >
       <Text className="mb-2 font-heading text-xl font-bold text-gray-900">Services</Text>
       <Text className="mb-4 text-sm text-gray-500">List the services you offer with pricing and duration.</Text>

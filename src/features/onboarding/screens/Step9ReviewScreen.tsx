@@ -1,18 +1,19 @@
 import React from 'react';
 import { Alert, Text, View } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { CheckCircle } from 'lucide-react-native';
-import { OnboardingStackParamList } from '../onboarding.types';
+import { OnboardingStackParamList, OnboardingFlowParamList } from '../onboarding.types';
 import { OnboardingLayout } from '../components/OnboardingLayout';
 import { Button, Input } from '@shared/components';
 import { useOnboardingStore } from '../store/onboarding.store';
+import { useAuthStore } from '@store/auth.store';
 import { colors } from '@shared/ui/colors';
 import { onboardingApi } from '../services/onboarding.api';
-import { useFeedbackStore } from '@store/feedback.store';
 
 type Props = NativeStackScreenProps<OnboardingStackParamList, 'OnboardingStep9'>;
 
-export const Step9ReviewScreen: React.FC<Props> = () => {
+export const Step9ReviewScreen: React.FC<Props> = ({ navigation }) => {
   const {
     clearDraft,
     isSubmitting,
@@ -34,7 +35,6 @@ export const Step9ReviewScreen: React.FC<Props> = () => {
     localPortfolioUris,
     localVerificationImageUri,
   } = useOnboardingStore();
-  const feedbackStore = useFeedbackStore();
 
   const [notes, setNotes] = React.useState('');
 
@@ -42,12 +42,12 @@ export const Step9ReviewScreen: React.FC<Props> = () => {
     setSubmitting(true);
     try {
       await onboardingApi.submitApplication(notes.trim() ? { notes: notes.trim() } : undefined);
+      const currentUser = useAuthStore.getState().user;
+      if (currentUser) {
+        useAuthStore.getState().setUser({ ...currentUser, onboardingStatus: 'PENDING_REVIEW' });
+      }
       await clearDraft();
-      feedbackStore.show({
-        type: 'success',
-        title: 'Application submitted!',
-        message: 'Your artisan application has been submitted for review.',
-      });
+      (navigation.getParent() as NativeStackNavigationProp<OnboardingFlowParamList>)?.navigate('SubmissionSuccess');
     } catch (err: any) {
       const apiError = err?.response?.data as { message?: string; details?: { missingFields?: string[] } } | undefined;
       if (apiError?.details?.missingFields) {

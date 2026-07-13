@@ -2,40 +2,46 @@ import React, { useEffect, useState } from 'react';
 import { Alert, Image, Pressable, Text, View } from 'react-native';
 import { Image as ImageIcon, Plus, Trash2 } from 'lucide-react-native';
 import * as ImagePicker from 'expo-image-picker';
-import { PortfolioItem } from '@app-types/index';
+import { PortfolioItem, PortfolioItemData } from '@app-types/index';
 import { artisanService } from '@services/artisan.service';
 import { Button, Input, Modal } from '@shared/components';
 import { colors } from '@shared/ui/colors';
 
+interface DisplayPortfolioItem {
+  id: string;
+  imageUrl: string;
+  caption: string;
+  /** Whether this item has a real server-side id for delete operations */
+  canDelete: boolean;
+}
+
+function toDisplayItem(item: PortfolioItem | PortfolioItemData): DisplayPortfolioItem {
+  if ('title' in item) {
+    return { id: item.id, imageUrl: item.imageUrl, caption: item.title, canDelete: true };
+  }
+  return { id: item.imageUrl, imageUrl: item.imageUrl, caption: item.caption, canDelete: false };
+}
+
 interface ProfilePortfolioProps {
   artisanId: string;
+  items: (PortfolioItem | PortfolioItemData)[];
 }
 
 export const ProfilePortfolio: React.FC<ProfilePortfolioProps> = ({
   artisanId,
+  items: externalItems,
 }) => {
-  const [items, setItems] = useState<PortfolioItem[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [items, setItems] = useState<DisplayPortfolioItem[]>(
+    externalItems.map(toDisplayItem)
+  );
   const [pendingImage, setPendingImage] = useState<string | null>(null);
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
-    if (!artisanId) {
-      console.warn('[ProfilePortfolio] No artisanId provided');
-      return;
-    }
-    artisanService
-      .getPortfolio(artisanId)
-      .then((result) => {
-        setItems(result);
-      })
-      .catch((err) => {
-        console.error('[ProfilePortfolio] Failed to load portfolio', err);
-      })
-      .finally(() => setLoading(false));
-  }, [artisanId]);
+    setItems(externalItems.map(toDisplayItem));
+  }, [externalItems]);
 
   const handleAdd = async () => {
     const permission =
@@ -71,7 +77,7 @@ export const ProfilePortfolio: React.FC<ProfilePortfolioProps> = ({
         title.trim(),
         description.trim() || undefined
       );
-      setItems((prev) => [newItem, ...prev]);
+      setItems((prev) => [toDisplayItem(newItem), ...prev]);
       setPendingImage(null);
       setTitle('');
       setDescription('');
@@ -100,8 +106,6 @@ export const ProfilePortfolio: React.FC<ProfilePortfolioProps> = ({
       },
     ]);
   };
-
-  if (loading) return null;
 
   return (
     <View className="mb-6">
@@ -143,22 +147,19 @@ export const ProfilePortfolio: React.FC<ProfilePortfolioProps> = ({
                   className="h-48 w-full bg-gray-100"
                   resizeMode="cover"
                 />
-                <Pressable
-                  onPress={() => handleRemove(item.id)}
-                  className="absolute right-2 top-2 h-8 w-8 items-center justify-center rounded-full bg-black/50 active:opacity-70"
-                >
-                  <Trash2 size={15} color="#ffffff" />
-                </Pressable>
+                {item.canDelete && (
+                  <Pressable
+                    onPress={() => handleRemove(item.id)}
+                    className="absolute right-2 top-2 h-8 w-8 items-center justify-center rounded-full bg-black/50 active:opacity-70"
+                  >
+                    <Trash2 size={15} color="#ffffff" />
+                  </Pressable>
+                )}
               </View>
               <View className="p-3">
                 <Text className="text-base font-bold text-gray-900" numberOfLines={1}>
-                  {item.title}
+                  {item.caption}
                 </Text>
-                {item.description ? (
-                  <Text className="mt-0.5 text-sm leading-5 text-gray-500" numberOfLines={2}>
-                    {item.description}
-                  </Text>
-                ) : null}
               </View>
             </View>
           ))}

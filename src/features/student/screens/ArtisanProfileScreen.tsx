@@ -17,7 +17,7 @@ import { Button, Loader } from '@shared/components';
 import { RatingStars } from '../components/RatingStars';
 import { useFavorites } from '../hooks/useFavorites';
 import { artisanApi } from '@services/api/artisan.api';
-import { ArtisanProfile, PortfolioItem, Service, Chat } from '@app-types/index';
+import { ArtisanProfile, PortfolioItem, PortfolioItemData, Service, Chat } from '@app-types/index';
 import { useChatStore } from '@store/chat.store';
 import { useAuthStore } from '@store/auth.store';
 import { computeChatId } from '@features/chat/utils';
@@ -47,24 +47,20 @@ export const ArtisanProfileScreen: React.FC<Props> = ({ route, navigation }) => 
   const [isStartingChat, setIsStartingChat] = useState(false);
 
   const [artisan, setArtisan] = useState<ArtisanProfile | null>(null);
-  const [portfolio, setPortfolio] = useState<PortfolioItem[]>([]);
+  const [portfolio, setPortfolio] = useState<PortfolioItemData[]>([]);
   const [availability, setAvailability] = useState<AvailabilitySlot[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   const loadData = useCallback(async () => {
     setIsLoading(true);
     try {
-      const [profileData, servicesData, portfolioData, availabilityData] = await Promise.all([
+      const [profileData, servicesData, availabilityData] = await Promise.all([
         artisanApi.getById(artisanId).catch((err) => {
           console.error('[ArtisanProfileScreen] getById failed', err);
           return null;
         }),
         artisanApi.getServices(artisanId).catch((err) => {
           console.error('[ArtisanProfileScreen] getServices failed', err);
-          return [];
-        }),
-        artisanApi.getPortfolio(artisanId).catch((err) => {
-          console.error('[ArtisanProfileScreen] getPortfolio failed', err);
           return [];
         }),
         artisanApi.getAvailability(artisanId).catch((err) => {
@@ -79,6 +75,7 @@ export const ArtisanProfileScreen: React.FC<Props> = ({ route, navigation }) => 
         return;
       }
       setArtisan({ ...profileData, services: servicesData });
+      const portfolioData = ((profileData as any).portfolio ?? []) as PortfolioItemData[];
       setPortfolio(portfolioData);
       setAvailability(availabilityData);
       void fetchReviews(artisanId);
@@ -132,9 +129,9 @@ export const ArtisanProfileScreen: React.FC<Props> = ({ route, navigation }) => 
 
         <View className="mb-6 items-center">
           <View className="relative">
-            {artisan.avatarUrl || artisan.profileImageUrl ? (
+            {artisan.avatarUrl || artisan.profileImageUrl || (artisan as any).user?.profileImageUrl ? (
               <Image
-                source={{ uri: artisan.avatarUrl ?? artisan.profileImageUrl! }}
+                source={{ uri: artisan.avatarUrl ?? artisan.profileImageUrl ?? (artisan as any).user?.profileImageUrl }}
                 className="h-24 w-24 rounded-full bg-gray-100"
                 resizeMode="cover"
               />
@@ -226,8 +223,8 @@ export const ArtisanProfileScreen: React.FC<Props> = ({ route, navigation }) => 
               showsHorizontalScrollIndicator={false}
               className="-mx-4 px-4"
             >
-              {portfolio.map((item) => (
-                <View key={item.id} className="mr-3">
+              {portfolio.map((item, index) => (
+                <View key={(item as any).id ?? index} className="mr-3">
                   {item.imageUrl ? (
                     <Image
                       source={{ uri: item.imageUrl }}
@@ -239,12 +236,12 @@ export const ArtisanProfileScreen: React.FC<Props> = ({ route, navigation }) => 
                       <ImageIcon size={24} color={colors.gray400} />
                     </View>
                   )}
-                  {item.title ? (
+                  {item.caption ? (
                     <Text
                       className="mt-1 w-28 text-xs text-gray-600"
                       numberOfLines={1}
                     >
-                      {item.title}
+                      {item.caption}
                     </Text>
                   ) : null}
                 </View>

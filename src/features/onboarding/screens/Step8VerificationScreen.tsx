@@ -11,10 +11,13 @@ import { colors } from '@shared/ui/colors';
 import { uploadService } from '@services/upload.service';
 import { onboardingApi } from '../services/onboarding.api';
 import { useFeedbackStore } from '@store/feedback.store';
+import { useEnsureStackHasAllSteps } from '../hooks/useOnboardingNavigation';
 
 type Props = NativeStackScreenProps<OnboardingStackParamList, 'OnboardingStep8'>;
 
 export const Step8VerificationScreen: React.FC<Props> = ({ navigation }) => {
+  useEnsureStackHasAllSteps(navigation, 8);
+
   const { cachedInstitution, cachedStudentId, cachedVerificationImageUrl, cacheVerification, localVerificationImageUri, setLocalVerificationImageUri, saveDraft } =
     useOnboardingStore();
   const feedbackStore = useFeedbackStore();
@@ -88,7 +91,7 @@ export const Step8VerificationScreen: React.FC<Props> = ({ navigation }) => {
       onSaveDraft={handleSaveDraft}
       disableNext={!institution || !studentId || (!localVerificationImageUri && !cachedVerificationImageUrl)}
       isNextLoading={isSaving}
-      nextLabel="Save & Continue"
+      nextLabel="Continue"
     >
       <Text className="mb-2 font-heading text-xl font-bold text-gray-900">Student Verification</Text>
       <Text className="mb-4 text-sm text-gray-500">We need to verify your student status.</Text>

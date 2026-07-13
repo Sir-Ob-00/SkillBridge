@@ -9,6 +9,7 @@ import { ArtisanTabParamList, ArtisanStackParamList } from '../artisan.types';
 import { ScreenWrapper } from '@shared/layout';
 import { Button, Modal } from '@shared/components';
 import { useAuth } from '@hooks/useAuth';
+import { useAuthStore } from '@store/auth.store';
 import { useUserStore } from '@store/user.store';
 import { colors } from '@shared/ui/colors';
 import { ArtisanProfile } from '@app-types/index';
@@ -36,6 +37,15 @@ export const ArtisanProfileScreen: React.FC<Props> = ({ navigation }) => {
       .getMyProfile()
       .then((profile) => {
         setArtisanProfile(profile);
+        const userData = (profile as any).user as Record<string, unknown> | undefined;
+        const profileImageUrl = typeof userData?.profileImageUrl === 'string' ? userData.profileImageUrl : undefined;
+        const currentUser = useAuthStore.getState().user;
+        if (profileImageUrl && currentUser && profileImageUrl !== currentUser.avatarUrl) {
+          useAuthStore.getState().setUser({
+            ...currentUser,
+            avatarUrl: profileImageUrl,
+          });
+        }
       })
       .catch((err) => {
         console.error('[ArtisanProfileScreen] Failed to load artisan profile', err);
@@ -120,7 +130,7 @@ export const ArtisanProfileScreen: React.FC<Props> = ({ navigation }) => {
         {artisanId && (
           <>
             <ProfileServicesSection artisanId={artisanId} />
-            <ProfilePortfolio artisanId={artisanId} />
+            <ProfilePortfolio artisanId={artisanId} items={(artisanProfile?.portfolio ?? []) as any} />
             <ProfileRatingsSection artisanId={artisanId} />
             <ProfileAvailabilityCard
               artisanId={artisanId}
