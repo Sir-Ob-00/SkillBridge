@@ -8,6 +8,7 @@ import {
 } from '@app-types/index';
 import { secureStorage } from '@services/storage/secureStorage';
 import { useAuthStore } from '@store/auth.store';
+import { logger } from '@utils/logger';
 import { COMPLETED_STEP_ORDER, STEP_TO_COMPLETED_KEY } from '../onboarding.types';
 import { onboardingApi, DraftData } from '../services/onboarding.api';
 
@@ -187,8 +188,8 @@ export const useOnboardingStore = create<OnboardingState>((set, get) => ({
           });
           loaded = true;
         }
-      } catch {
-        // Server unavailable — fall through to AsyncStorage
+      } catch (err) {
+        logger.warn('[OnboardingStore] GET /draft failed, falling back to AsyncStorage', err);
       }
 
       // 2. Fallback: AsyncStorage
@@ -215,8 +216,8 @@ export const useOnboardingStore = create<OnboardingState>((set, get) => ({
           });
         }
       }
-    } catch {
-      // ignore
+    } catch (err) {
+      logger.error('[OnboardingStore] loadDraft failed', err);
     } finally {
       set({ isLoading: false });
     }
@@ -241,7 +242,7 @@ export const useOnboardingStore = create<OnboardingState>((set, get) => ({
       businessName: cachedBusinessName || undefined,
       bio: cachedBio || null,
       location: cachedLocation || null,
-      pricingFrom: cachedPricingFrom || null,
+      pricingFrom: cachedPricingFrom ?? null,
       categoryIds: cachedCategoryIds,
       skillIds: cachedSkillIds,
       services: cachedServices,
@@ -254,8 +255,8 @@ export const useOnboardingStore = create<OnboardingState>((set, get) => ({
 
     try {
       await onboardingApi.putDraft(serverDraft);
-    } catch {
-      // Network error — AsyncStorage is the fallback
+    } catch (err) {
+      logger.warn('[OnboardingStore] PUT /draft failed, saved to AsyncStorage only', err);
     }
 
     // Local draft (offline resilience)
@@ -284,8 +285,8 @@ export const useOnboardingStore = create<OnboardingState>((set, get) => ({
   clearDraft: async () => {
     try {
       await onboardingApi.putDraft({ currentStep: 1, completedSteps: [] });
-    } catch {
-      // Server unavailable — local clear still happens
+    } catch (err) {
+      logger.warn('[OnboardingStore] Clear server draft failed, cleared locally only', err);
     }
 
     await secureStorage.removeItem(getDraftKey());
