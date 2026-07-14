@@ -21,7 +21,7 @@ export const DashboardUrgentActions: React.FC<DashboardUrgentActionsProps> = ({
   const { updateStatus } = useBookingStore();
 
   const pendingRequests = bookings.filter((b) => b.status === 'pending');
-  const hasUnread = chats.some((c) => c.lastMessage);
+  const hasUnread = chats.some((c) => (c.unreadCount ?? 0) > 0);
 
   const handleAccept = async (id: string) => {
     try {

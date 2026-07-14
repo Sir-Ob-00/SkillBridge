@@ -165,32 +165,35 @@ export const useOnboardingStore = create<OnboardingState>((set, get) => ({
     try {
       let loaded = false;
 
-      // 1. Server is canonical source
-      try {
-        const serverDraft = await onboardingApi.getDraft();
-        console.log('[loadDraft] serverDraft:', JSON.stringify(serverDraft));
-        if (serverDraft) {
-          set({
-            currentStep: serverDraft.currentStep as OnboardingStepId,
-            cachedPhone: serverDraft.phone ?? '',
-            cachedProfileImageUrl: serverDraft.profileImageUrl ?? null,
-            cachedBusinessName: serverDraft.businessName ?? '',
-            cachedBio: serverDraft.bio ?? '',
-            cachedLocation: serverDraft.location ?? '',
-            cachedPricingFrom: serverDraft.pricingFrom ?? 0,
-            cachedCategoryIds: serverDraft.categoryIds ?? [],
-            cachedSkillIds: serverDraft.skillIds ?? [],
-            cachedServices: serverDraft.services ?? [],
-            cachedSlots: serverDraft.slots ?? [],
-            cachedPortfolioItems: serverDraft.portfolioItems ?? [],
-            cachedInstitution: serverDraft.institution ?? '',
-            cachedStudentId: serverDraft.studentId ?? '',
-            cachedVerificationImageUrl: serverDraft.verificationImageUrl ?? null,
-          });
-          loaded = true;
+      // 1. Server is canonical source (only for artisans)
+      const user = useAuthStore.getState().user;
+      if (user?.role === 'artisan') {
+        try {
+          const serverDraft = await onboardingApi.getDraft();
+          console.log('[loadDraft] serverDraft:', JSON.stringify(serverDraft));
+          if (serverDraft) {
+            set({
+              currentStep: serverDraft.currentStep as OnboardingStepId,
+              cachedPhone: serverDraft.phone ?? '',
+              cachedProfileImageUrl: serverDraft.profileImageUrl ?? null,
+              cachedBusinessName: serverDraft.businessName ?? '',
+              cachedBio: serverDraft.bio ?? '',
+              cachedLocation: serverDraft.location ?? '',
+              cachedPricingFrom: serverDraft.pricingFrom ?? 0,
+              cachedCategoryIds: serverDraft.categoryIds ?? [],
+              cachedSkillIds: serverDraft.skillIds ?? [],
+              cachedServices: serverDraft.services ?? [],
+              cachedSlots: serverDraft.slots ?? [],
+              cachedPortfolioItems: serverDraft.portfolioItems ?? [],
+              cachedInstitution: serverDraft.institution ?? '',
+              cachedStudentId: serverDraft.studentId ?? '',
+              cachedVerificationImageUrl: serverDraft.verificationImageUrl ?? null,
+            });
+            loaded = true;
+          }
+        } catch (err) {
+          logger.warn('[OnboardingStore] GET /draft failed, falling back to AsyncStorage', err);
         }
-      } catch (err) {
-        logger.warn('[OnboardingStore] GET /draft failed, falling back to AsyncStorage', err);
       }
 
       // 2. Fallback: AsyncStorage
@@ -293,12 +296,13 @@ export const useOnboardingStore = create<OnboardingState>((set, get) => ({
       verificationImageUrl: cachedVerificationImageUrl || undefined,
     };
 
-    console.log('[saveDraft] categoryIds:', cachedCategoryIds, 'skillIds:', cachedSkillIds, 'services.length:', cachedServices.length);
-
-    try {
-      await onboardingApi.putDraft(serverDraft);
-    } catch (err) {
-      logger.warn('[OnboardingStore] PUT /draft failed, saved to AsyncStorage only', err);
+    const user = useAuthStore.getState().user;
+    if (user?.role === 'artisan') {
+      try {
+        await onboardingApi.putDraft(serverDraft);
+      } catch (err) {
+        logger.warn('[OnboardingStore] PUT /draft failed, saved to AsyncStorage only', err);
+      }
     }
 
     // Local draft (offline resilience)
@@ -325,10 +329,13 @@ export const useOnboardingStore = create<OnboardingState>((set, get) => ({
   },
 
   clearDraft: async () => {
-    try {
-      await onboardingApi.putDraft({ currentStep: 1, completedSteps: [] });
-    } catch (err) {
-      logger.warn('[OnboardingStore] Clear server draft failed, cleared locally only', err);
+    const user = useAuthStore.getState().user;
+    if (user?.role === 'artisan') {
+      try {
+        await onboardingApi.putDraft({ currentStep: 1, completedSteps: [] });
+      } catch (err) {
+        logger.warn('[OnboardingStore] Clear server draft failed, cleared locally only', err);
+      }
     }
 
     await secureStorage.removeItem(getDraftKey());

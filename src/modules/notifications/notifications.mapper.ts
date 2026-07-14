@@ -74,10 +74,8 @@ const EVENT_MAP: Record<
     type: 'chat',
     build: (data) => ({
       title: 'New Message',
-      message: data.message?.text
-        ? (data.message.text as string).slice(0, 100)
-        : 'You have a new message.',
-      entityId: data.message?.chatId as string | undefined,
+      message: (data.message?.text as string) ?? (data.text as string) ?? 'You have a new message.',
+      entityId: (data.message?.chatId as string) ?? (data.chatId as string) ?? undefined,
     }),
   },
 };

@@ -4,6 +4,7 @@ import { chatApi } from '@features/chat/services/chat.api';
 import { chatSocket } from '@features/chat/services/chat.socket';
 import { getOtherUserId } from '@features/chat/utils';
 import { useAuthStore } from './auth.store';
+import { useNotificationsStore } from '@modules/notifications/notifications.store';
 
 interface ChatState {
   chats: Chat[];
@@ -40,6 +41,22 @@ const useChatStore = create<ChatState>((set, get) => ({
       const chats = [...apiChats, ...localOnly];
       chats.sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
       set({ chats, chatsLoading: false });
+
+      // Sync notifications for chats with unread messages (REST fallback)
+      const { notifications, addNotification } = useNotificationsStore.getState();
+      for (const chat of apiChats) {
+        if (!chat.lastMessage) continue;
+        if (notifications.some((n) => n.type === 'chat' && n.entityId === chat.id)) continue;
+        addNotification({
+          id: `chat_${chat.id}_${chat.lastMessage.createdAt}`,
+          type: 'chat',
+          title: 'New Message',
+          message: chat.lastMessage.text ?? 'You have a new message.',
+          entityId: chat.id,
+          createdAt: chat.lastMessage.createdAt ?? chat.updatedAt,
+          read: false,
+        });
+      }
     } catch {
       set({ chatsLoading: false });
     }
@@ -111,6 +128,11 @@ const useChatStore = create<ChatState>((set, get) => ({
   markAsRead: async (chatId) => {
     try {
       await chatApi.markAsRead(chatId);
+      set((s) => ({
+        chats: s.chats.map((c) =>
+          c.id === chatId ? { ...c, unreadCount: 0 } : c
+        ),
+      }));
     } catch {
       // non-critical
     }

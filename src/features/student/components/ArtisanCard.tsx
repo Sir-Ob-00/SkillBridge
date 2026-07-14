@@ -29,9 +29,9 @@ export const ArtisanCard: React.FC<ArtisanCardProps> = ({
       className="mb-3 flex-row overflow-hidden rounded-2xl border border-gray-100 bg-white p-3 shadow-sm shadow-gray-200 active:opacity-80"
     >
       <View className="mr-3 self-center">
-        {artisan.avatarUrl || artisan.profileImageUrl ? (
+        {artisan.avatarUrl || artisan.profileImageUrl || (artisan as any).user?.profileImageUrl ? (
           <Image
-            source={{ uri: artisan.avatarUrl ?? artisan.profileImageUrl! }}
+            source={{ uri: artisan.avatarUrl ?? artisan.profileImageUrl ?? (artisan as any).user?.profileImageUrl }}
             className="h-16 w-16 rounded-full bg-gray-100"
             resizeMode="cover"
           />

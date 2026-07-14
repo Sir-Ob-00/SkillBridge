@@ -25,16 +25,12 @@ export const SearchScreen: React.FC<Props> = ({ navigation }) => {
   const [query, setQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [results, setResults] = useState<ArtisanProfile[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [hasSearched, setHasSearched] = useState(false);
 
   const debouncedQuery = useDebounce(query, 400);
 
   useEffect(() => {
-    if (!hasSearched && !debouncedQuery.trim() && !selectedCategory) {
-      return;
-    }
-
     setIsLoading(true);
     setHasSearched(true);
 
