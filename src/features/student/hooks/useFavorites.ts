@@ -1,33 +1,18 @@
-import { useCallback, useEffect, useState } from 'react';
-import { secureStorage } from '@services/storage/secureStorage';
-
-const FAVORITES_KEY = 'skillbridge.favorites';
+import { useEffect } from 'react';
+import { useFavoritesStore } from '../store/favorites.store';
 
 export const useFavorites = () => {
-  const [favoriteIds, setFavoriteIds] = useState<string[]>([]);
-  const [isLoaded, setIsLoaded] = useState(false);
+  const favoriteIds = useFavoritesStore((s) => s.favoriteIds);
+  const isLoaded = useFavoritesStore((s) => s.isLoaded);
+  const hydrate = useFavoritesStore((s) => s.hydrate);
+  const toggleFavorite = useFavoritesStore((s) => s.toggleFavorite);
+  const isFavorite = useFavoritesStore((s) => s.isFavorite);
 
   useEffect(() => {
-    secureStorage.getItem<string[]>(FAVORITES_KEY).then((stored) => {
-      setFavoriteIds(stored ?? []);
-      setIsLoaded(true);
-    });
-  }, []);
-
-  const toggleFavorite = useCallback((artisanId: string) => {
-    setFavoriteIds((prev) => {
-      const next = prev.includes(artisanId)
-        ? prev.filter((id) => id !== artisanId)
-        : [...prev, artisanId];
-      void secureStorage.setItem(FAVORITES_KEY, next);
-      return next;
-    });
-  }, []);
-
-  const isFavorite = useCallback(
-    (artisanId: string) => favoriteIds.includes(artisanId),
-    [favoriteIds]
-  );
+    if (!isLoaded) {
+      void hydrate();
+    }
+  }, [isLoaded, hydrate]);
 
   return { favoriteIds, isFavorite, toggleFavorite, isLoaded };
 };
