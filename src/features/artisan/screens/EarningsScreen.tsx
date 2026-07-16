@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { Text, View } from 'react-native';
-import { CompositeScreenProps } from '@react-navigation/native';
+import { CompositeScreenProps, useIsFocused } from '@react-navigation/native';
 import { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Wallet, TrendingUp, Clock } from 'lucide-react-native';
@@ -25,14 +25,30 @@ interface Earnings {
 export const EarningsScreen: React.FC<Props> = () => {
   const [earnings, setEarnings] = useState<Earnings | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const isFocused = useIsFocused();
+
+  const fetchEarnings = useCallback(async () => {
+    try {
+      const data = await artisanApi.getEarnings();
+      setEarnings(data);
+    } catch {
+      setEarnings({ total: 0, thisMonth: 0, pending: 0 });
+    }
+  }, []);
 
   useEffect(() => {
-    artisanApi
-      .getEarnings()
-      .then(setEarnings)
-      .catch(() => setEarnings({ total: 0, thisMonth: 0, pending: 0 }))
-      .finally(() => setIsLoading(false));
-  }, []);
+    if (isFocused) {
+      setIsLoading(true);
+      fetchEarnings().finally(() => setIsLoading(false));
+    }
+  }, [isFocused, fetchEarnings]);
+
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    await fetchEarnings();
+    setIsRefreshing(false);
+  };
 
   if (isLoading) {
     return <Loader fullScreen label="Loading earnings..." />;
@@ -63,7 +79,7 @@ export const EarningsScreen: React.FC<Props> = () => {
   ];
 
   return (
-    <ScreenWrapper scrollable contentClassName="pt-2">
+    <ScreenWrapper scrollable contentClassName="pt-2" onRefresh={handleRefresh} refreshing={isRefreshing}>
       <Text className="mb-4 font-heading text-2xl font-bold text-gray-900">
         Earnings
       </Text>

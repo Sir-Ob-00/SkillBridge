@@ -35,6 +35,7 @@ export const DashboardScreen: React.FC<Props> = ({ navigation }) => {
   const [isDataLoading, setIsDataLoading] = useState(true);
   const isFocused = useIsFocused();
   const { isConnected } = useSocket();
+  const completedCount = bookings.filter((b) => b.status === 'completed').length;
 
   const loadDashboard = useCallback(() => {
     setIsDataLoading(true);
@@ -72,6 +73,12 @@ export const DashboardScreen: React.FC<Props> = ({ navigation }) => {
       loadDashboard();
     }
   }, [isFocused, isConnected, loadDashboard]);
+
+  useEffect(() => {
+    if (completedCount > 0) {
+      artisanApi.getEarnings().then(setEarnings).catch(() => {});
+    }
+  }, [completedCount]);
 
   const showLoading = isFocused && (!isConnected || isDataLoading);
 
