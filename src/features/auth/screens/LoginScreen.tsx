@@ -18,25 +18,21 @@ export const LoginScreen: React.FC<Props> = ({ navigation, route }) => {
   const role = route.params?.role;
   const { login, isLoading, clearError } = useAuth();
   const feedbackStore = useFeedbackStore();
-
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [emailError, setEmailError] = useState<string | undefined>();
 
   const handleLogin = async () => {
     clearError();
-
     if (!validateEmail(email)) {
       setEmailError('Enter a valid email address.');
       return;
     }
     setEmailError(undefined);
-
     if (password.length < 1) {
       Alert.alert('Missing password', 'Please enter your password.');
       return;
     }
-
     try {
       await login({ email: normalizeEmail(email), password, role });
       feedbackStore.show({
@@ -68,7 +64,6 @@ export const LoginScreen: React.FC<Props> = ({ navigation, route }) => {
           </Text>
         )}
       </View>
-
       <Input
         label="Email"
         placeholder="you@university.edu"
@@ -79,7 +74,6 @@ export const LoginScreen: React.FC<Props> = ({ navigation, route }) => {
         error={emailError}
         leftIcon={<Mail size={18} color={colors.gray400} />}
       />
-
       <Input
         label="Password"
         placeholder="••••••••"
@@ -88,16 +82,6 @@ export const LoginScreen: React.FC<Props> = ({ navigation, route }) => {
         onChangeText={setPassword}
         leftIcon={<Lock size={18} color={colors.gray400} />}
       />
-
-      <Pressable
-        onPress={() => navigation.navigate('ForgotPassword')}
-        className="mb-6 self-end"
-      >
-        <Text className="text-sm font-medium text-primary">
-          Forgot password?
-        </Text>
-      </Pressable>
-
       <Button
         label="Sign In"
         onPress={handleLogin}
@@ -105,7 +89,6 @@ export const LoginScreen: React.FC<Props> = ({ navigation, route }) => {
         fullWidth
         size="lg"
       />
-
       <View className="mt-8 flex-row justify-center items-center">
         <Text className="text-base text-gray-500">Don't have an account? </Text>
         <Pressable onPress={() => navigation.navigate('Register', { role })} className="active:opacity-70">

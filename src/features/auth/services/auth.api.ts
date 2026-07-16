@@ -52,22 +52,6 @@ export const authApi = {
     return data.data;
   },
 
-  forgotPassword: async (payload: { email: string }) => {
-    const { data } = await apiClient.post<ApiResponse<{ message: string }>>(
-      API_ROUTES.AUTH.FORGOT_PASSWORD,
-      payload
-    );
-    return data.data;
-  },
-
-  resetPassword: async (payload: { token: string; password: string }) => {
-    const { data } = await apiClient.post<ApiResponse<{ message: string }>>(
-      API_ROUTES.AUTH.RESET_PASSWORD,
-      payload
-    );
-    return data.data;
-  },
-
   refreshToken: async (refreshToken: string) => {
     const { data } = await apiClient.post<ApiResponse<RefreshResponse>>(
       API_ROUTES.AUTH.REFRESH,
