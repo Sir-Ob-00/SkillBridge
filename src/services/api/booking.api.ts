@@ -15,6 +15,7 @@ export interface CreateBookingPayload {
 }
 
 export interface BookingListParams {
+  artisanId?: string;
   status?: BookingStatus;
   page?: number;
   pageSize?: number;

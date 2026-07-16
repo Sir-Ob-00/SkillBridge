@@ -24,6 +24,9 @@ const config: ExpoConfig = {
     },
     package: 'com.skillbridge.mobile',
   },
+  updates: {
+    enabled: false,
+  },
   plugins: ['expo-secure-store', 'expo-location', 'expo-system-ui'],
   extra: {
     apiBaseUrl: process.env.API_BASE_URL,

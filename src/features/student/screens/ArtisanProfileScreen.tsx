@@ -5,6 +5,7 @@ import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import {
   ArrowLeft,
   BadgeCheck,
+  Flag,
   Heart,
   Image as ImageIcon,
   MapPin,
@@ -17,6 +18,7 @@ import { Button, Loader } from '@shared/components';
 import { RatingStars } from '../components/RatingStars';
 import { useFavorites } from '../hooks/useFavorites';
 import { artisanApi } from '@services/api/artisan.api';
+import { bookingApi } from '@services/api/booking.api';
 import { ArtisanProfile, PortfolioItem, PortfolioItemData, Service, Chat } from '@app-types/index';
 import { useChatStore } from '@store/chat.store';
 import { useAuthStore } from '@store/auth.store';
@@ -25,6 +27,7 @@ import { formatCurrency } from '@utils/currency';
 import { colors } from '@shared/ui/colors';
 import { useReviewsStore } from '@features/reviews/reviews.store';
 import { ReviewCard } from '@features/reviews/components/ReviewCard';
+import { ReportForm } from '@features/reports/components/ReportForm';
 
 type Props = NativeStackScreenProps<StudentStackParamList, 'ArtisanProfile'>;
 
@@ -50,6 +53,9 @@ export const ArtisanProfileScreen: React.FC<Props> = ({ route, navigation }) => 
   const [portfolio, setPortfolio] = useState<PortfolioItemData[]>([]);
   const [availability, setAvailability] = useState<AvailabilitySlot[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [totalEarned, setTotalEarned] = useState(0);
+  const [isRevenueLoading, setIsRevenueLoading] = useState(true);
+  const [reportFormVisible, setReportFormVisible] = useState(false);
 
   const loadData = useCallback(async () => {
     setIsLoading(true);
@@ -79,6 +85,24 @@ export const ArtisanProfileScreen: React.FC<Props> = ({ route, navigation }) => 
       setPortfolio(portfolioData);
       setAvailability(availabilityData);
       void fetchReviews(artisanId);
+
+      setIsRevenueLoading(true);
+      try {
+        const bookingsResult = await bookingApi.list({
+          artisanId: profileData.id,
+          status: 'completed',
+          pageSize: 100,
+        });
+        const total = (bookingsResult.items ?? []).reduce(
+          (sum, b) => sum + (b.price ?? 0),
+          0
+        );
+        setTotalEarned(total);
+      } catch {
+        setTotalEarned(0);
+      } finally {
+        setIsRevenueLoading(false);
+      }
     } catch (err) {
       console.error('[ArtisanProfileScreen] Unexpected error in loadData', err);
       setArtisan(null);
@@ -123,9 +147,17 @@ export const ArtisanProfileScreen: React.FC<Props> = ({ route, navigation }) => 
   return (
     <ScreenWrapper scrollable={false} edges={['top', 'left', 'right']}>
       <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
-        <Pressable onPress={() => navigation.goBack()} className="mt-2 mb-3 w-10">
-          <ArrowLeft size={24} color={colors.gray800} />
-        </Pressable>
+        <View className="mt-2 mb-3 flex-row items-center justify-between">
+          <Pressable onPress={() => navigation.goBack()} className="w-10">
+            <ArrowLeft size={24} color={colors.gray800} />
+          </Pressable>
+          <Pressable
+            onPress={() => setReportFormVisible(true)}
+            className="h-10 w-10 items-center justify-center"
+          >
+            <Flag size={18} color={colors.gray400} />
+          </Pressable>
+        </View>
 
         <View className="mb-6 items-center">
           <View className="relative">
@@ -172,6 +204,13 @@ export const ArtisanProfileScreen: React.FC<Props> = ({ route, navigation }) => 
             </View>
             <Text className="text-sm font-semibold text-gray-900">
               {formatCurrency(lowestPrice)}
+            </Text>
+          </View>
+
+          <View className="mt-2 flex-row items-center">
+            <Text className="text-xs text-gray-400">Total earned: </Text>
+            <Text className="text-sm font-semibold text-success">
+              {isRevenueLoading ? '...' : formatCurrency(totalEarned)}
             </Text>
           </View>
         </View>
@@ -408,6 +447,12 @@ export const ArtisanProfileScreen: React.FC<Props> = ({ route, navigation }) => 
           </Pressable>
         </View>
       </View>
+
+      <ReportForm
+        visible={reportFormVisible}
+        onClose={() => setReportFormVisible(false)}
+        targetUserId={artisan.userId ?? artisan.id}
+      />
     </ScreenWrapper>
   );
 };
