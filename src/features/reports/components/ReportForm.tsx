@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { KeyboardAvoidingView, Platform, ScrollView, Text, TextInput, View } from 'react-native';
+import { Alert, KeyboardAvoidingView, Platform, ScrollView, Text, TextInput, View } from 'react-native';
 import { AlertTriangle } from 'lucide-react-native';
 import { Modal, Button } from '@shared/components';
 import { colors } from '@shared/ui/colors';
@@ -52,6 +52,7 @@ export const ReportForm: React.FC<ReportFormProps> = ({
       setDetails('');
       onClose();
       onSuccess?.();
+      Alert.alert('Report Submitted', 'Thank you. Our team will review your report.');
     } catch (err) {
       const msg =
         (err as { message?: string })?.message || 'Failed to submit report.';

@@ -3,7 +3,7 @@ import { Text, View } from 'react-native';
 import { CompositeScreenProps, useIsFocused } from '@react-navigation/native';
 import { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { Wallet, TrendingUp, Clock } from 'lucide-react-native';
+import { Wallet, ClipboardCheck } from 'lucide-react-native';
 import { ArtisanTabParamList, ArtisanStackParamList } from '../artisan.types';
 import { ScreenWrapper } from '@shared/layout';
 import { Loader } from '@shared/components/Loader';
@@ -16,37 +16,37 @@ type Props = CompositeScreenProps<
   NativeStackScreenProps<ArtisanStackParamList>
 >;
 
-interface Earnings {
-  total: number;
-  thisMonth: number;
-  pending: number;
+interface Revenue {
+  artisanId: string;
+  totalEarned: number;
+  completedBookings: number;
 }
 
 export const EarningsScreen: React.FC<Props> = () => {
-  const [earnings, setEarnings] = useState<Earnings | null>(null);
+  const [revenue, setRevenue] = useState<Revenue | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const isFocused = useIsFocused();
 
-  const fetchEarnings = useCallback(async () => {
+  const fetchRevenue = useCallback(async () => {
     try {
-      const data = await artisanApi.getEarnings();
-      setEarnings(data);
+      const data = await artisanApi.getMyRevenue();
+      setRevenue(data);
     } catch {
-      setEarnings({ total: 0, thisMonth: 0, pending: 0 });
+      setRevenue({ artisanId: '', totalEarned: 0, completedBookings: 0 });
     }
   }, []);
 
   useEffect(() => {
     if (isFocused) {
       setIsLoading(true);
-      fetchEarnings().finally(() => setIsLoading(false));
+      fetchRevenue().finally(() => setIsLoading(false));
     }
-  }, [isFocused, fetchEarnings]);
+  }, [isFocused, fetchRevenue]);
 
   const handleRefresh = async () => {
     setIsRefreshing(true);
-    await fetchEarnings();
+    await fetchRevenue();
     setIsRefreshing(false);
   };
 
@@ -56,32 +56,27 @@ export const EarningsScreen: React.FC<Props> = () => {
 
   const cards = [
     {
-      label: 'Total earnings',
-      value: earnings?.total ?? 0,
+      label: 'Total earned',
+      value: revenue?.totalEarned ?? 0,
       icon: Wallet,
       bg: 'bg-primary/10',
       color: colors.primary,
+      format: (v: number) => formatCurrency(v),
     },
     {
-      label: 'This month',
-      value: earnings?.thisMonth ?? 0,
-      icon: TrendingUp,
+      label: 'Completed bookings',
+      value: revenue?.completedBookings ?? 0,
+      icon: ClipboardCheck,
       bg: 'bg-success/10',
       color: colors.success,
-    },
-    {
-      label: 'Pending payout',
-      value: earnings?.pending ?? 0,
-      icon: Clock,
-      bg: 'bg-secondary/20',
-      color: colors.secondary,
+      format: (v: number) => String(v),
     },
   ];
 
   return (
     <ScreenWrapper scrollable contentClassName="pt-2" onRefresh={handleRefresh} refreshing={isRefreshing}>
       <Text className="mb-4 font-heading text-2xl font-bold text-gray-900">
-        Earnings
+        Revenue
       </Text>
 
       <View className="gap-3">
@@ -98,7 +93,7 @@ export const EarningsScreen: React.FC<Props> = () => {
               <View>
                 <Text className="text-sm text-gray-500">{card.label}</Text>
                 <Text className="text-xl font-bold text-gray-900">
-                  {formatCurrency(card.value)}
+                  {card.format(card.value)}
                 </Text>
               </View>
             </View>

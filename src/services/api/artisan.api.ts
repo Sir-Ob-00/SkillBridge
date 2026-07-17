@@ -66,10 +66,17 @@ export const artisanApi = {
     return data.data;
   },
 
-  getEarnings: async () => {
+  getMyRevenue: async () => {
     const { data } = await apiClient.get<
-      ApiResponse<{ total: number; thisMonth: number; pending: number }>
-    >(API_ROUTES.ARTISANS.EARNINGS);
+      ApiResponse<{ artisanId: string; totalEarned: number; completedBookings: number }>
+    >(API_ROUTES.ARTISANS.REVENUE);
+    return data.data;
+  },
+
+  getArtisanRevenue: async (id: string) => {
+    const { data } = await apiClient.get<
+      ApiResponse<{ artisanId: string; totalEarned: number; completedBookings: number }>
+    >(API_ROUTES.ARTISANS.REVENUE_BY_ID(id));
     return data.data;
   },
 

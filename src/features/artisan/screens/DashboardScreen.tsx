@@ -28,7 +28,7 @@ export const DashboardScreen: React.FC<Props> = ({ navigation }) => {
   const user = useAuthStore((state) => state.user);
   const userName = user?.name?.split(' ')[0];
   const { bookings, fetchBookings } = useBookingStore();
-  const [earnings, setEarnings] = useState<{ total: number; thisMonth: number; pending: number } | null>(null);
+  const [revenue, setRevenue] = useState<{ artisanId: string; totalEarned: number; completedBookings: number } | null>(null);
   const [chats, setChats] = useState<Chat[]>([]);
   const [averageRating, setAverageRating] = useState(0);
   const [reviewCount, setReviewCount] = useState(0);
@@ -41,7 +41,7 @@ export const DashboardScreen: React.FC<Props> = ({ navigation }) => {
     setIsDataLoading(true);
 
     const bookingsPromise = fetchBookings({});
-    const earningsPromise = artisanApi.getEarnings().then(setEarnings).catch(() => {});
+    const revenuePromise = artisanApi.getMyRevenue().then(setRevenue).catch(() => {});
     const chatsPromise = chatApi.listChats().then(setChats).catch(() => {});
     const reviewsPromise = artisanService
       .getMyProfile()
@@ -63,7 +63,7 @@ export const DashboardScreen: React.FC<Props> = ({ navigation }) => {
       })
       .catch(() => {});
 
-    Promise.all([bookingsPromise, earningsPromise, chatsPromise, reviewsPromise])
+    Promise.all([bookingsPromise, revenuePromise, chatsPromise, reviewsPromise])
       .catch(() => {})
       .finally(() => setIsDataLoading(false));
   }, [fetchBookings]);
@@ -76,7 +76,7 @@ export const DashboardScreen: React.FC<Props> = ({ navigation }) => {
 
   useEffect(() => {
     if (completedCount > 0) {
-      artisanApi.getEarnings().then(setEarnings).catch(() => {});
+      artisanApi.getMyRevenue().then(setRevenue).catch(() => {});
     }
   }, [completedCount]);
 
@@ -116,7 +116,7 @@ export const DashboardScreen: React.FC<Props> = ({ navigation }) => {
 
           <DashboardQuickStats
             bookings={bookings}
-            earningsThisMonth={earnings?.thisMonth ?? 0}
+            totalEarned={revenue?.totalEarned ?? 0}
             averageRating={averageRating}
             reviewCount={reviewCount}
           />

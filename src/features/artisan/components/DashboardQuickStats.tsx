@@ -7,7 +7,7 @@ import { colors } from '@shared/ui/colors';
 
 interface DashboardQuickStatsProps {
   bookings: Booking[];
-  earningsThisMonth: number;
+  totalEarned: number;
   averageRating: number;
   reviewCount: number;
 }
@@ -29,7 +29,7 @@ const StatCard: React.FC<{
 
 export const DashboardQuickStats: React.FC<DashboardQuickStatsProps> = ({
   bookings,
-  earningsThisMonth,
+  totalEarned,
   averageRating,
   reviewCount,
 }) => {
@@ -42,8 +42,8 @@ export const DashboardQuickStats: React.FC<DashboardQuickStatsProps> = ({
         <View className="w-[calc(50%-6px)]">
           <StatCard
             icon={<Wallet size={18} color={colors.success} />}
-            label="Earnings"
-            value={formatCurrency(earningsThisMonth)}
+            label="Total earned"
+            value={formatCurrency(totalEarned)}
             bg="bg-success/10"
           />
         </View>

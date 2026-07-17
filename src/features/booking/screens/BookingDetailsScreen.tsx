@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { Alert, Pressable, Text, View } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { ArrowLeft, Calendar, DollarSign, FileText, Flag, User } from 'lucide-react-native';
@@ -11,9 +11,9 @@ import { formatCurrency } from '@utils/currency';
 import { formatDateTime } from '@utils/formatDate';
 import { colors } from '@shared/ui/colors';
 import { useRole } from '@hooks/useRole';
-import { useCallback } from 'react';
 import { BookingStatus } from '@app-types/index';
 import { useReviewsStore } from '@features/reviews/reviews.store';
+import { artisanApi } from '@services/api/artisan.api';
 import { ReportForm } from '@features/reports/components/ReportForm';
 
 type Props = NativeStackScreenProps<{ BookingDetails: { bookingId: string } }, 'BookingDetails'>;
@@ -24,10 +24,19 @@ export const BookingDetailsScreen: React.FC<Props> = ({ route, navigation }) => 
   const { selectedBooking, isLoading, fetchBookingById, updateStatus } = useBookingStore();
   const { isReviewed, markReviewed } = useReviewsStore();
   const [reportVisible, setReportVisible] = useState(false);
+  const [artisanUserId, setArtisanUserId] = useState<string | null>(null);
 
   React.useEffect(() => {
     void fetchBookingById(bookingId);
   }, [bookingId, fetchBookingById]);
+
+  useEffect(() => {
+    if (selectedBooking) {
+      artisanApi.getById(selectedBooking.artisanId).then((profile) => {
+        setArtisanUserId(profile.userId);
+      }).catch(() => {});
+    }
+  }, [selectedBooking]);
 
   const handleStatusUpdate = useCallback(async (status: BookingStatus) => {
     try {
@@ -60,7 +69,7 @@ export const BookingDetailsScreen: React.FC<Props> = ({ route, navigation }) => 
   const displayPrice = booking.service?.price ?? booking.price ?? 0;
   const customerName = booking.student?.name ?? `Student #${booking.studentId.slice(-4).toUpperCase()}`;
   const artisanName = booking.artisan?.businessName ?? `Artisan #${booking.artisanId.slice(-4).toUpperCase()}`;
-  const reportTargetUserId = isArtisan ? booking.studentId : booking.artisanId;
+  const reportTargetUserId = isArtisan ? booking.studentId : (artisanUserId ?? booking.artisanId);
 
   return (
     <ScreenWrapper scrollable edges={['top', 'left', 'right']}>

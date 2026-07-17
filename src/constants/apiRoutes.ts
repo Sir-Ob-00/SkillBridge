@@ -22,7 +22,8 @@ export const API_ROUTES = {
     SERVICE_ITEM: (id: string, serviceId: string) =>
       `/api/v1/artisans/${id}/services/${serviceId}`,
     AVAILABILITY: (id: string) => `/api/v1/artisans/${id}/availability`,
-    EARNINGS: '/api/v1/artisans/me/earnings',
+    REVENUE: '/api/v1/artisans/me/revenue',
+    REVENUE_BY_ID: (id: string) => `/api/v1/artisans/${id}/revenue`,
     PORTFOLIO: (id: string) => `/api/v1/artisans/${id}/portfolio`,
     PORTFOLIO_ITEM: (id: string, itemId: string) =>
       `/api/v1/artisans/${id}/portfolio/${itemId}`,
